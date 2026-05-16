@@ -5,12 +5,13 @@
 #include "kstring.h"
 
 #define BUFFER_SIZE 256
+#define MAX_ARGS 16
 
 static char buffer[BUFFER_SIZE];
 static int buf_pos = 0;
 
 // command handler type
-typedef void (*command_func)();
+typedef void (*command_func)(int argc, char **argv);
 
 struct command {
     const char *name;
@@ -18,11 +19,47 @@ struct command {
 };
 
 // forward declarations
-static void cmd_hello();
-static void cmd_help();
-static void cmd_clear();
+static void cmd_hello(int argc, char **argv);
+static void cmd_help(int argc, char **argv);
+static void cmd_clear(int argc, char **argv);
+static void cmd_mem(int argc, char **argv);
+static void cmd_uptime(int argc, char **argv);
+static void cmd_echo(int argc, char **argv);
+static void cmd_color(int argc, char **argv);
 
-static void cmd_mem() {
+static struct command commands[] = {
+    { "hello", cmd_hello },
+    { "help",  cmd_help  },
+    { "clear", cmd_clear },
+    { "mem", cmd_mem },
+    { "uptime", cmd_uptime },
+    { "echo", cmd_echo },
+    { "color", cmd_color },
+    { 0, 0 }  // null terminator
+};
+
+static int tokenize(char *input, char **argv, int max_args) {
+    int argc = 0;
+    char *p = input;
+
+    while (*p && argc < max_args) {
+        while (*p == ' ') p++;
+        if (*p == '\0') break;
+
+        argv[argc++] = p;
+
+        while (*p && *p != ' ') p++;
+
+        if (*p == ' ') {
+            *p = '\0';
+            p++;
+        }
+    }
+
+    return argc;
+}
+
+static void cmd_mem(int argc, char **argv) {
     vga_print("\nUsed: ");
     vga_print_num(kmalloc_used());
     vga_print(" bytes\nFree: ");
@@ -30,36 +67,17 @@ static void cmd_mem() {
     vga_print(" bytes\n");
 }
 
-static void cmd_uptime() {
+static void cmd_uptime(int argc, char **argv) {
     vga_print("\nUptime: ");
     vga_print_num(timer_ticks() / 100);
     vga_print(" seconds \n");
 }
 
-static struct command commands[] = {
-    { "hello", cmd_hello },
-    { "help",  cmd_help  },
-    { "clear", cmd_clear },
-    { "mem", cmd_mem},
-    { "uptime", cmd_uptime},
-    { 0, 0 }  // null terminator
-};
-
-// string compare since we have no stdlib
-static int str_equal(const char *a, const char *b) {
-    int i = 0;
-    while (a[i] && b[i]) {
-        if (a[i] != b[i]) return 0;
-        i++;
-    }
-    return a[i] == b[i];
-}
-
-static void cmd_hello() {
+static void cmd_hello(int argc, char **argv) {
     vga_print("\nHello from myOS!\n");
 }
 
-static void cmd_help() {
+static void cmd_help(int argc, char **argv) {
     vga_print("\nAvailable commands:\n");
     for (int i = 0; commands[i].name != 0; i++) {
         vga_print("  ");
@@ -68,22 +86,57 @@ static void cmd_help() {
     }
 }
 
-static void cmd_clear() {
+static void cmd_clear(int argc, char **argv) {
     vga_clear();
 }
 
-static void shell_execute(const char *cmd) {
+static void cmd_echo(int argc, char **argv) {
+    vga_print("\n");
+    for (int i = 1; i < argc; i++) {
+        vga_print(argv[i]);
+        if (i < argc - 1) vga_print(" ");
+    }
+    vga_print("\n");
+}
+
+static void cmd_color(int argc, char **argv) {
+    if (argc < 2) {
+        vga_print("\nUsage: color <0-15>\n");
+        return;
+    }
+
+    int color = 0;
+    char *s = argv[1];
+    while (*s >= '0' && *s <= '9') {
+        color = color * 10 + (*s - '0');
+        s++;
+    }
+
+    if (color > 15) {
+        vga_print("\nColor must be 0-15\n");
+        return;
+    }
+    vga_set_color((unsigned char)color, 0);
+    vga_print("\nColor set.\n");
+}
+
+static void shell_execute(char *input) {
     if (buf_pos == 0) return;
 
+    char *argv[MAX_ARGS];
+    int argc = tokenize(input, argv, MAX_ARGS);
+
+    if (argc == 0) return;
+
     for (int i = 0; commands[i].name != 0; i++) {
-        if (kstrcmp(cmd, commands[i].name) == 0) {
-            commands[i].func();
+        if (kstrcmp(argv[0], commands[i].name) == 0) {
+            commands[i].func(argc, argv);
             return;
         }
     }
 
     vga_print("\nUnknown command: ");
-    vga_print(cmd);
+    vga_print(argv[0]);
     vga_print("\n");
 }
 
