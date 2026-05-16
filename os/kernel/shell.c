@@ -2,6 +2,7 @@
 #include "vga.h"
 #include "kmalloc.h"
 #include "timer.h"
+#include "kstring.h"
 
 #define BUFFER_SIZE 256
 
@@ -75,7 +76,7 @@ static void shell_execute(const char *cmd) {
     if (buf_pos == 0) return;
 
     for (int i = 0; commands[i].name != 0; i++) {
-        if (str_equal(cmd, commands[i].name)) {
+        if (kstrcmp(cmd, commands[i].name) == 0) {
             commands[i].func();
             return;
         }
