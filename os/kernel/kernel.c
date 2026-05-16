@@ -18,9 +18,6 @@ void kernel_main() {
 
     __asm__ volatile ("sti");
 
-    kmalloc(100);
-    kmalloc(200);
-
     shell_init();
 
     while (1) {}
