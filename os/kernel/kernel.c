@@ -4,6 +4,7 @@
 #include "irq.h"
 #include "keyboard.h"
 #include "vga.h"
+#include "shell.h"
 
 void kernel_main() {
     gdt_install();
@@ -14,6 +15,8 @@ void kernel_main() {
     vga_init();
 
     __asm__ volatile ("sti");
+
+    shell_init();
 
     while (1) {}
 }

@@ -1,19 +1,8 @@
 #include "keyboard.h"
 #include "irq.h"
-#include "vga.h"
+#include "shell.h"
 
 #define KEYBOARD_DATA_PORT 0x60
-
-static void outb(unsigned short port, unsigned char val) {
-    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
-}
-
-static void update_cursor(int pos) {
-    outb(0x3D4, 0x0F);
-    outb(0x3D5, (unsigned char)(pos & 0xFF));
-    outb(0x3D4, 0x0E);
-    outb(0x3D5, (unsigned char)((pos >> 8) & 0xFF));
-}
 
 static const char scancode_map[] = {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0,
@@ -22,8 +11,6 @@ static const char scancode_map[] = {
     0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
     '*', 0, ' '
 };
-
-static int cursor = 6;
 
 static unsigned char inb(unsigned short port) {
     unsigned char val;
@@ -36,18 +23,19 @@ static void keyboard_handler(struct registers *r) {
     if (scancode & 0x80) return;
 
     if (scancode == 0x1C) {
-        vga_putchar('\n');
+        shell_process_char('\n');
         return;
     }
 
     if (scancode == 0x0E) {
-        vga_putchar('\b');
+        shell_process_char('\b');
         return;
     }
+
     if (scancode < sizeof(scancode_map)) {
         char c = scancode_map[scancode];
         if (c != 0) {
-            vga_putchar(c);
+            shell_process_char(c);
         }
     }
 }
