@@ -1,4 +1,5 @@
 #include "kmalloc.h"
+#include "vga.h"
 
 struct block_header {
     unsigned int size;
@@ -63,6 +64,40 @@ void kfree(void *ptr) {
             cur = cur->next;
         }
     }
+}
+
+void kmalloc_info() {
+    vga_print("\nHeap start: ");
+    vga_print_hex((unsigned int)heap_start);
+    vga_print("\nHeap end:   ");
+    vga_print_hex(heap_end);
+    vga_print("\n");
+
+    int block_num = 0;
+    unsigned int total_used = 0;
+    unsigned int total_free = 0;
+
+    struct block_header *cur = heap_start;
+    while (cur) {
+        vga_print("  [");
+        vga_print_num(block_num++);
+        vga_print("] addr=");
+        vga_print_hex((unsigned int)cur);
+        vga_print(" size=");
+        vga_print_num(cur->size);
+        vga_print(cur->free ? "  FREE\n" : "  USED\n");
+
+        if (cur->free) total_free += cur->size;
+        else total_used += cur->size;
+
+        cur = cur->next;
+    }
+
+    vga_print("Total used: ");
+    vga_print_num(total_used);
+    vga_print(" bytes\nTotal free: ");
+    vga_print_num(total_free);
+    vga_print(" bytes\n");
 }
 
 unsigned int kmalloc_used() {

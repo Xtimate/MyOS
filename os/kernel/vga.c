@@ -102,3 +102,23 @@ void vga_print_num(unsigned int n) {
         vga_putchar(buf[j]);
     }
 }
+
+void vga_print_hex(unsigned int n) {
+    vga_print("0x");
+    char buf[8];
+    int i = 0;
+    if (n == 0) {
+        vga_print("00000000");
+        return;
+    }
+    while (n > 0) {
+        int nibble = n & 0xF;
+        buf[i++] = nibble < 10 ? '0' + nibble : 'a' + nibble - 10;
+        n >>= 4;
+    }
+
+    while (i < 8) buf[i++] = '0';
+    for (int j = i - 1; j >= 0; j--) {
+        vga_putchar(buf[j]);
+    }
+}

@@ -26,6 +26,7 @@ static void cmd_mem(int argc, char **argv);
 static void cmd_uptime(int argc, char **argv);
 static void cmd_echo(int argc, char **argv);
 static void cmd_color(int argc, char **argv);
+static void cmd_meminfo(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -35,8 +36,13 @@ static struct command commands[] = {
     { "uptime", cmd_uptime },
     { "echo", cmd_echo },
     { "color", cmd_color },
+    { "meminfo", cmd_meminfo },
     { 0, 0 }  // null terminator
 };
+
+static void cmd_meminfo(int argc, char **argv) {
+    kmalloc_info();
+}
 
 static int tokenize(char *input, char **argv, int max_args) {
     int argc = 0;
