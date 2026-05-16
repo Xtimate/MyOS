@@ -6,6 +6,7 @@
 #include "vga.h"
 #include "shell.h"
 #include "kmalloc.h"
+#include "timer.h"
 
 void kernel_main() {
     gdt_install();
@@ -13,6 +14,7 @@ void kernel_main() {
     isr_install();
     irq_install();
     keyboard_install();
+    timer_install(100);
     vga_init();
     kmalloc_init(0x500000, 0x600000);
 

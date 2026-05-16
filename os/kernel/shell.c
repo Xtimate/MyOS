@@ -1,6 +1,7 @@
 #include "shell.h"
 #include "vga.h"
 #include "kmalloc.h"
+#include "timer.h"
 
 #define BUFFER_SIZE 256
 
@@ -28,11 +29,18 @@ static void cmd_mem() {
     vga_print(" bytes\n");
 }
 
+static void cmd_uptime() {
+    vga_print("\nUptime: ");
+    vga_print_num(timer_ticks() / 100);
+    vga_print(" seconds \n");
+}
+
 static struct command commands[] = {
     { "hello", cmd_hello },
     { "help",  cmd_help  },
     { "clear", cmd_clear },
     { "mem", cmd_mem},
+    { "uptime", cmd_uptime},
     { 0, 0 }  // null terminator
 };
 
