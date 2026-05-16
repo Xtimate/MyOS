@@ -3,6 +3,7 @@
 #include "isr.h"
 #include "irq.h"
 #include "keyboard.h"
+#include "vga.h"
 
 void kernel_main() {
     gdt_install();
@@ -10,18 +11,9 @@ void kernel_main() {
     isr_install();
     irq_install();
     keyboard_install();
+    vga_init();
 
     __asm__ volatile ("sti");
-
-    char *vga = (char *)0xB8000;
-
-    const char *msg = "Ready: ";
-    int i = 0;
-    while (msg[i] != 0) {
-        vga[i * 2] = msg[i];
-        vga[i * 2 + 1] = 0x07;
-        i++;
-    }
 
     while (1) {}
 }

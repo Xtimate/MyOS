@@ -1,6 +1,6 @@
 #include "keyboard.h"
-#include "include/keyboard.h"
 #include "irq.h"
+#include "vga.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 
@@ -33,17 +33,21 @@ static unsigned char inb(unsigned short port) {
 
 static void keyboard_handler(struct registers *r) {
     unsigned char scancode = inb(KEYBOARD_DATA_PORT);
-
     if (scancode & 0x80) return;
 
+    if (scancode == 0x1C) {
+        vga_putchar('\n');
+        return;
+    }
+
+    if (scancode == 0x0E) {
+        vga_putchar('\b');
+        return;
+    }
     if (scancode < sizeof(scancode_map)) {
         char c = scancode_map[scancode];
         if (c != 0) {
-            char *vga = (char *)0xB8000;
-            vga[cursor * 2] = c;
-            vga[cursor * 2 + 1] = 0x07;
-            cursor++;
-            update_cursor(cursor);
+            vga_putchar(c);
         }
     }
 }
