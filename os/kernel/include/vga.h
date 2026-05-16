@@ -8,6 +8,7 @@ void vga_init();
 void vga_clear();
 void vga_putchar(char c);
 void vga_print(const char *str);
+void vga_print_num(unsigned int n);
 void vga_set_color(unsigned char fg, unsigned char bg);
 
 #endif

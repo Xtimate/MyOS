@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "vga.h"
+#include "kmalloc.h"
 
 #define BUFFER_SIZE 256
 
@@ -19,10 +20,19 @@ static void cmd_hello();
 static void cmd_help();
 static void cmd_clear();
 
+static void cmd_mem() {
+    vga_print("\nUsed: ");
+    vga_print_num(kmalloc_used());
+    vga_print(" bytes\nFree: ");
+    vga_print_num(kmalloc_free());
+    vga_print(" bytes\n");
+}
+
 static struct command commands[] = {
     { "hello", cmd_hello },
     { "help",  cmd_help  },
     { "clear", cmd_clear },
+    { "mem", cmd_mem},
     { 0, 0 }  // null terminator
 };
 
