@@ -1,17 +1,21 @@
+static const char msg[] = "Hello from user space!\n";
+
 void _start() {
-    // sys_print via int 0x80
-    asm volatile (
+    __asm__ volatile (
         "mov $0, %%eax\n"
-        "mov $1f, %%ebx\n"
+        "mov %0, %%ebx\n"
         "int $0x80\n"
-        "1: .asciz \"Hello from user space!\\n\""
+        :
+        : "r"(msg)
+        : "eax", "ebx"
+    );
+
+    __asm__ volatile (
+        "mov $1, %%eax\n"
+        "xor %%ebx, %%ebx\n"
+        "int $0x80\n"
         ::: "eax", "ebx"
     );
 
-    // sys_exit
-    asm volatile (
-        "mov $1, %%eax\n"
-        "int $0x80\n"
-        ::: "eax"
-    );
+    while (1) {}
 }

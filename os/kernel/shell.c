@@ -173,3 +173,10 @@ void shell_process_char(char c) {
         }
     }
 }
+
+void shell_run() {
+    buf_pos = 0;
+    shell_prompt();
+    __asm__ volatile ("sti");
+    while (1) { __asm__ volatile ("hlt"); }
+}

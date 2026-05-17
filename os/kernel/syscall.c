@@ -1,6 +1,7 @@
 #include "syscall.h"
 #include "idt.h"
 #include "vga.h"
+#include "shell.h"
 
 extern void isr128();
 
@@ -11,7 +12,7 @@ static void sys_print(struct registers *r) {
 
 static void sys_exit(struct registers *r) {
     vga_print("\n[Process exited]\n");
-    while (1) {}
+    shell_run();
 }
 
 void syscall_handler(struct registers *r) {

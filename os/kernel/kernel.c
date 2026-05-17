@@ -10,24 +10,12 @@
 #include "paging.h"
 #include "usermode.h"
 #include "syscall.h"
+#include "elf.h"
 
 #define USER_STACK_TOP 0x00300000
 
-static const char *user_msg = "hello from user mode!\n";
-
-void user_main() {
-    __asm__ volatile (
-        "mov $0, %%eax\n"
-        "mov %0, %%ebx\n"
-        "int $0x80\n"
-        "mov $1, %%eax\n"
-        "int $0x80\n"
-        :
-        : "r"(user_msg)
-        : "eax", "ebx"
-    );
-    while (1) {}
-}
+extern char user_hello_start;
+extern char user_hello_end;
 
 void kernel_main() {
     gdt_install();
@@ -44,13 +32,19 @@ void kernel_main() {
     __asm__ volatile ("sti");
 
     shell_init();
-    vga_print("user_main addr: ");
-    vga_print_hex((unsigned int)user_main);
+
+    vga_print("Loading ELF...\n");
+    unsigned int entry = elf_load(&user_hello_start);
+    if (entry == 0) {
+        vga_print("ELF load failed\n");
+        while (1) {}
+    }
+
+    vga_print("Jumping to user mode at: ");
+    vga_print_hex(entry);
     vga_print("\n");
-    vga_print("user_stack top: ");
-    vga_print_hex(USER_STACK_TOP);
-    vga_print("\n");
-    //jump_usermode(user_main, USER_STACK_TOP);
+
+    jump_usermode((void (*)())entry, USER_STACK_TOP);
 
     while (1) {}
 }
