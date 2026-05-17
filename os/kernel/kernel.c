@@ -8,6 +8,13 @@
 #include "kmalloc.h"
 #include "timer.h"
 #include "paging.h"
+#include "usermode.h"
+
+static unsigned char user_stack[4096];
+
+void user_main() {
+    while (1) {}
+}
 
 void kernel_main() {
     gdt_install();
@@ -23,6 +30,7 @@ void kernel_main() {
     __asm__ volatile ("sti");
 
     shell_init();
+    jump_usermode(user_main, (unsigned int)(user_stack + 4096));
 
     while (1) {}
 }
