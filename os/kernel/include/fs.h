@@ -1,0 +1,12 @@
+#ifndef FS_H
+#define FS_H
+
+typedef struct {
+    char *data;
+    unsigned int size;
+} fs_file_t;
+
+int fs_init(void *archive, unsigned int size);
+fs_file_t fs_open(const char *name);
+
+#endif
