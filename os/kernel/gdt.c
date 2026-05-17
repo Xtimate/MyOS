@@ -1,7 +1,10 @@
 #include "gdt.h"
 
-struct gdt_entry gdt[3];
+struct gdt_entry gdt[6];
 struct gdt_ptr gp;
+struct tss_entry tss;
+
+static unsigned char kernel_stack[8192];
 
 void gdt_set_entry(int num, unsigned long base, unsigned long limit, unsigned char access, unsigned char gran) {
     gdt[num].base_low    = (base & 0xFFFF);
@@ -13,13 +16,33 @@ void gdt_set_entry(int num, unsigned long base, unsigned long limit, unsigned ch
     gdt[num].access      = access;
 }
 
+static void tss_set(int num, unsigned short ss0, unsigned int esp0) {
+    unsigned char *p = (unsigned char *)&tss;
+    for (unsigned int i = 0; i < sizeof(struct tss_entry); i++) p[i] = 0;
+
+    unsigned int base  = (unsigned int)&tss;
+    unsigned int limit = sizeof(struct tss_entry) - 1;
+
+    gdt_set_entry(num, base, limit, 0x89, 0x00);
+
+    tss.ss0  = ss0;
+    tss.esp0 = esp0;
+    tss.cs   = 0x0B;
+    tss.ss = tss.ds = tss.es = tss.fs = tss.gs = 0x13;
+}
+
 void gdt_install() {
-    gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
+    gp.limit = (sizeof(struct gdt_entry) * 6) - 1;
     gp.base  = (unsigned int)&gdt;
 
-    gdt_set_entry(0, 0, 0, 0, 0);                // null
-    gdt_set_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // code
-    gdt_set_entry(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // data
+    gdt_set_entry(0, 0, 0, 0, 0);
+    gdt_set_entry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
+    gdt_set_entry(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
+    gdt_set_entry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
+    gdt_set_entry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
+    tss_set(5, 0x10, (unsigned int)(kernel_stack + 8192));
 
     gdt_flush((unsigned int)&gp);
+    tss_flush();
+
 }

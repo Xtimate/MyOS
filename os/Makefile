@@ -30,7 +30,7 @@ iso: kernel/kernel.bin
 	grub-mkrescue -o myos.iso iso
 
 run: iso
-	qemu-system-x86_64 -cdrom myos.iso -display gtk
+	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown
 
 clean:
 	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso
