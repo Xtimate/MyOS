@@ -50,7 +50,7 @@ void kernel_main() {
     vga_print("user_stack top: ");
     vga_print_hex(USER_STACK_TOP);
     vga_print("\n");
-    jump_usermode(user_main, USER_STACK_TOP);
+    //jump_usermode(user_main, USER_STACK_TOP);
 
     while (1) {}
 }
