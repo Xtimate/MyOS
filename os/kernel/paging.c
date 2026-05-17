@@ -15,8 +15,8 @@ void paging_init() {
         page_directory[i] = 0;
     }
 
-    page_directory[768] = BOOT_PAGE_TABLE1_PHYS | PAGE_PRESENT | PAGE_WRITABLE;
-    page_directory[769] = BOOT_PAGE_TABLE2_PHYS | PAGE_PRESENT | PAGE_WRITABLE;
+    page_directory[768] = BOOT_PAGE_TABLE1_PHYS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
+    page_directory[769] = BOOT_PAGE_TABLE2_PHYS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
     for (int i = 0; i < 1024; i++) {
         user_page_table[i] = (i * 0x1000) | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
@@ -26,6 +26,14 @@ void paging_init() {
     page_directory[0] = user_pt_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
     unsigned int pd_phys = (unsigned int)page_directory - 0xC0000000;
+
+    unsigned int *pt1 = (unsigned int *)0xC0102000;
+    unsigned int *pt2 = (unsigned int *)0xC0103000;
+    for (int i = 0; i < 1024; i++) {
+        if (pt1[i] & PAGE_PRESENT) pt1[i] |= PAGE_USER;
+        if (pt2[i] & PAGE_PRESENT) pt2[i] |= PAGE_USER;
+
+    }
 
     __asm__ volatile ("mov %0, %%cr3" : : "r"(pd_phys));
 }

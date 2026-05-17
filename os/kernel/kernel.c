@@ -11,7 +11,7 @@
 #include "usermode.h"
 #include "syscall.h"
 
-static unsigned char user_stack[4096];
+#define USER_STACK_TOP 0x00300000
 
 static const char *user_msg = "hello from user mode!\n";
 
@@ -44,7 +44,13 @@ void kernel_main() {
     __asm__ volatile ("sti");
 
     shell_init();
-    jump_usermode(user_main, (unsigned int)(user_stack + 4096));
+    vga_print("user_main addr: ");
+    vga_print_hex((unsigned int)user_main);
+    vga_print("\n");
+    vga_print("user_stack top: ");
+    vga_print_hex(USER_STACK_TOP);
+    vga_print("\n");
+    jump_usermode(user_main, USER_STACK_TOP);
 
     while (1) {}
 }
