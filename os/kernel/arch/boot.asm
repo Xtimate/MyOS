@@ -61,6 +61,8 @@ start:
     mov ecx, boot_page_directory
     mov cr3, ecx
 
+    mov dword [0x000B8008], 0x07310731  ; '11' = CR3 loaded
+
     mov ecx, cr0
     or ecx, 0x80000000
     mov cr0, ecx
@@ -76,6 +78,7 @@ higher_half:
     invlpg [0]
 
     mov esp, stack_top
+
     push 0
     popf
     call kernel_main

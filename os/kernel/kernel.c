@@ -39,12 +39,12 @@ void kernel_main() {
     timer_install(100);
     vga_init();
     kmalloc_init(0xC0500000, 0xC0600000);
-    paging_init();
+    //paging_init();
 
     __asm__ volatile ("sti");
 
     shell_init();
-    jump_usermode(user_main, (unsigned int)(user_stack + 4096));
+    //jump_usermode(user_main, (unsigned int)(user_stack + 4096));
 
     while (1) {}
 }
