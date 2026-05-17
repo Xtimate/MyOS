@@ -8,7 +8,7 @@ user/hello:
 fs.tar: user/hello
 	cd user && tar cf ../fs.tar hello
 
-kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/arch/fs_bin.asm kernel/kernel.c
+kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/arch/fs_bin.asm kernel/exec.c kernel/kernel.c
 	$(AS) -f elf32 kernel/arch/boot.asm -o kernel/arch/boot.o
 	$(CC) $(CFLAGS) -c kernel/gdt.c -o kernel/gdt.o
 	$(AS) -f elf32 kernel/arch/gdt.asm -o kernel/arch/gdt_flush.o
@@ -30,9 +30,10 @@ kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm 
 	$(CC) $(CFLAGS) -c kernel/kmalloc.c -o kernel/kmalloc.o
 	$(CC) $(CFLAGS) -c kernel/elf.c -o kernel/elf.o
 	$(CC) $(CFLAGS) -c kernel/fs.c -o kernel/fs.o
+	$(CC) $(CFLAGS) -c kernel/exec.c -o kernel/exec.o
 	$(AS) -f elf32 kernel/arch/fs_bin.asm -o kernel/arch/fs_bin.o
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
-	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/arch/fs_bin.o -o kernel/kernel.bin
+	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/arch/fs_bin.o kernel/exec.o -o kernel/kernel.bin
 iso: kernel/kernel.bin
 	mkdir -p iso/boot/grub
 	cp kernel/kernel.bin iso/boot/kernel.bin

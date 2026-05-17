@@ -3,6 +3,7 @@
 #include "kmalloc.h"
 #include "timer.h"
 #include "kstring.h"
+#include "exec.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -27,6 +28,7 @@ static void cmd_uptime(int argc, char **argv);
 static void cmd_echo(int argc, char **argv);
 static void cmd_color(int argc, char **argv);
 static void cmd_meminfo(int argc, char **argv);
+static void cmd_exec(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -37,6 +39,7 @@ static struct command commands[] = {
     { "echo", cmd_echo },
     { "color", cmd_color },
     { "meminfo", cmd_meminfo },
+    { "exec", cmd_exec },
     { 0, 0 }  // null terminator
 };
 
@@ -124,6 +127,15 @@ static void cmd_color(int argc, char **argv) {
     }
     vga_set_color((unsigned char)color, 0);
     vga_print("\nColor set.\n");
+}
+
+static void cmd_exec(int argc, char **argv) {
+    if (argc < 2) {
+        vga_print("Usage: exec <filename>\n");
+        return;
+    }
+    vga_print("\n");
+    exec(argv[1]);
 }
 
 static void shell_execute(char *input) {

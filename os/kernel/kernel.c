@@ -36,24 +36,5 @@ void kernel_main() {
 
     shell_init();
 
-    vga_print("Loading hello from fs...\n");
-        fs_file_t f = fs_open("hello");
-        if (f.data == 0) {
-            vga_print("File not found\n");
-            while (1) {}
-        }
-
-        unsigned int entry = elf_load(f.data);
-        if (entry == 0) {
-            vga_print("ELF load failed\n");
-            while (1) {}
-        }
-
-        vga_print("Jumping to: ");
-        vga_print_hex(entry);
-        vga_print("\n");
-
-        jump_usermode((void (*)())entry, USER_STACK_TOP);
-
-        while (1) {}
+    while (1) {}
 }
