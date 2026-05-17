@@ -38,7 +38,7 @@ void kernel_main() {
     keyboard_install();
     timer_install(100);
     vga_init();
-    kmalloc_init(0x500000, 0x600000);
+    kmalloc_init(0xC0500000, 0xC0600000);
     paging_init();
 
     __asm__ volatile ("sti");

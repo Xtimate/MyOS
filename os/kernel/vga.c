@@ -1,5 +1,5 @@
 #include "vga.h"
-#define VGA_BUFFER 0xB8000
+#define VGA_BUFFER 0xC00B8000
 
 static int cursor_x = 0;
 static int cursor_y = 0;

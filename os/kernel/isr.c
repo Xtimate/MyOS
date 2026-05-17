@@ -105,7 +105,7 @@ void isr_install(void) {
 }
 
 void fault_handler(struct registers *r) {
-    char *vga = (char *)0xB8000;
+    char *vga = (char *)0xC00B8000;
     const char *msg = exception_messages[r->int_no];
     int i = 0;
     while (msg[i] != 0) {
