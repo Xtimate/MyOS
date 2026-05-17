@@ -131,7 +131,7 @@ static void cmd_color(int argc, char **argv) {
 
 static void cmd_exec(int argc, char **argv) {
     if (argc < 2) {
-        vga_print("Usage: exec <filename>\n");
+        vga_print("\nUsage: exec <filename>\n");
         return;
     }
     vga_print("\n");

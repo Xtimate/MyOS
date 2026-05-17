@@ -1,11 +1,13 @@
 #include "timer.h"
 #include "irq.h"
 #include "vga.h"
+#include "process.h"
 
 static unsigned int ticks = 0;
 
 static void timer_handler(struct registers *r) {
     ticks++;
+    schedule(r);
 }
 
 void timer_install(unsigned int hz) {

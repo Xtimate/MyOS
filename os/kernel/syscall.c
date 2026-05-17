@@ -2,6 +2,7 @@
 #include "idt.h"
 #include "vga.h"
 #include "shell.h"
+#include "process.h"
 
 extern void isr128();
 
@@ -12,6 +13,10 @@ static void sys_print(struct registers *r) {
 
 static void sys_exit(struct registers *r) {
     vga_print("\n[Process exited]\n");
+    if (current_process) {
+        process_exit(current_process);
+        current_process = 0;
+    }
     shell_run();
 }
 

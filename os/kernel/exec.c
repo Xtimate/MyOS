@@ -1,10 +1,9 @@
 #include "include/exec.h"
 #include "include/fs.h"
-#include "include/elf.h"
 #include "include/vga.h"
-#include "include/usermode.h"
+#include "include/process.h"
 
-#define USER_STACK_TOP 0x00300000
+extern void process_start(unsigned int new_esp, unsigned int pd_phys);
 
 void exec(const char *name) {
     fs_file_t f = fs_open(name);
@@ -13,11 +12,14 @@ void exec(const char *name) {
         return;
     }
 
-    unsigned int entry = elf_load(f.data);
-    if (entry == 0) {
-        vga_print("exec: ELF load failed\n");
+    process_t *proc = process_create(f.data);
+    if (proc == 0) {
+        vga_print("exec: failed to create process\n");
         return;
     }
 
-    jump_usermode((void (*)())entry, USER_STACK_TOP);
+    current_process = proc;
+    proc->state = PROCESS_STATE_RUNNING;
+
+    process_start(proc->esp, (unsigned int)proc->page_dir);
 }
