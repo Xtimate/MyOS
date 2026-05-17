@@ -1,7 +1,7 @@
 CC = gcc
 AS = nasm
 CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib -Ikernel/include
-kernel/kernel.bin: kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/paging.asm kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/kernel.c
+kernel/kernel.bin: kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/kernel.c
 	$(AS) -f elf32 kernel/arch/boot.asm -o kernel/arch/boot.o
 	$(CC) $(CFLAGS) -c kernel/gdt.c -o kernel/gdt.o
 	$(AS) -f elf32 kernel/arch/gdt.asm -o kernel/arch/gdt_flush.o
@@ -12,7 +12,6 @@ kernel/kernel.bin: kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/
 	$(CC) $(CFLAGS) -c kernel/irq.c -o kernel/irq.o
 	$(AS) -f elf32 kernel/arch/irq.asm -o kernel/arch/irq.o
 	$(CC) $(CFLAGS) -c kernel/paging.c -o kernel/paging.o
-	$(AS) -f elf32 kernel/arch/paging.asm -o kernel/arch/paging.o
 	$(AS) -f elf32 kernel/arch/usermode.asm -o kernel/arch/usermode.o
 	$(CC) $(CFLAGS) -c kernel/syscall.c -o kernel/syscall.o
 	$(AS) -f elf32 kernel/arch/syscall.asm -o kernel/arch/syscall.o
@@ -23,7 +22,7 @@ kernel/kernel.bin: kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/
 	$(CC) $(CFLAGS) -c kernel/kstring.c -o kernel/kstring.o
 	$(CC) $(CFLAGS) -c kernel/kmalloc.c -o kernel/kmalloc.o
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
-	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o -o kernel/kernel.bin
+	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o -o kernel/kernel.bin
 iso: kernel/kernel.bin
 	mkdir -p iso/boot/grub
 	cp kernel/kernel.bin iso/boot/kernel.bin
