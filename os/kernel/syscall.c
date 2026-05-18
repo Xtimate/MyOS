@@ -6,6 +6,10 @@
 
 extern void isr128();
 
+static void outb(unsigned short port, unsigned char val) {
+    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
 static void sys_print(struct registers *r) {
     char *str = (char *)r->ebx;
     vga_print(str);
@@ -17,6 +21,7 @@ static void sys_exit(struct registers *r) {
         process_exit(current_process);
         current_process = 0;
     }
+    outb(0x20, 0x20);
     shell_run();
 }
 
