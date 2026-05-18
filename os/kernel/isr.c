@@ -1,5 +1,6 @@
 #include "isr.h"
 #include "idt.h"
+#include "vga.h"
 
 extern void isr0();
 extern void isr1();
@@ -112,6 +113,16 @@ void fault_handler(struct registers *r) {
         vga[i * 2] = msg[i];
         vga[i * 2 + 1] = 0x04;
         i++;
+    }
+
+    if (r->int_no == 14) {
+        unsigned int cr2;
+        __asm__ volatile ("mov %%cr2, %0" : "=r"(cr2));
+
+        vga_print("\nCR2: ");
+        vga_print_hex(cr2);
+        vga_print("\nEIP: ");
+        vga_print_hex(r->eip);
     }
     while (1) {}
 }

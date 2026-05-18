@@ -3,8 +3,6 @@
 #include "include/vga.h"
 #include "include/process.h"
 
-extern void process_start(unsigned int new_esp, unsigned int pd_phys);
-
 void exec(const char *name) {
     fs_file_t f = fs_open(name);
     if (f.data == 0) {
@@ -18,8 +16,7 @@ void exec(const char *name) {
         return;
     }
 
-    current_process = proc;
-    proc->state = PROCESS_STATE_RUNNING;
-
-    process_start(proc->esp, (unsigned int)proc->page_dir);
+    proc->state = PROCESS_STATE_READY;
+    if (current_process)
+        current_process->state = PROCESS_STATE_READY;
 }

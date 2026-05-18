@@ -37,5 +37,6 @@ struct tss_entry {
 void gdt_install();
 void gdt_flush(unsigned int);
 void tss_flush();
+void tss_set_kernel_stack(unsigned int esp0);
 
 #endif

@@ -1,16 +1,20 @@
 #include "syscall.h"
 #include "idt.h"
+#include "include/process.h"
 #include "vga.h"
 #include "shell.h"
 #include "process.h"
 
 extern void isr128();
+extern void kernel_thread_start(unsigned int new_esp);
 
 static void outb(unsigned short port, unsigned char val) {
     __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
 }
 
 static void sys_print(struct registers *r) {
+    vga_print_hex(r->ebx);
+    vga_print("\n");
     char *str = (char *)r->ebx;
     vga_print(str);
 }
@@ -22,7 +26,8 @@ static void sys_exit(struct registers *r) {
         current_process = 0;
     }
     outb(0x20, 0x20);
-    shell_run();
+    __asm__ volatile ("sti");
+    while (1) { __asm__ volatile ("hlt"); }
 }
 
 void syscall_handler(struct registers *r) {

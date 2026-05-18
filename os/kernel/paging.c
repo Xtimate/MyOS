@@ -11,7 +11,7 @@
 #define PAGE_FRAME_START 0xC0400000
 #define PAGE_FRAME_PHYS 0x00400000
 
-static unsigned int page_directory[1024] __attribute__((aligned(4096)));
+unsigned int page_directory[1024] __attribute__((aligned(4096)));
 static unsigned int user_page_table[1024] __attribute__((aligned(4096)));
 
 void paging_init() {

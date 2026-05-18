@@ -1,11 +1,20 @@
 #include "include/process.h"
 #include "include/paging.h"
 #include "include/vga.h"
+#include "include/gdt.h"
 
 extern void switch_context(unsigned int *old_esp, unsigned int new_esp, unsigned int pd_phys);
 
 void schedule(struct registers *r) {
-    if (current_process == 0) return;
+    if (current_process == 0) {
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (processes[i].state == PROCESS_STATE_READY) {
+                current_process = &processes[i];
+                break;
+            }
+        }
+        if (current_process == 0) return;
+    }
 
     process_t *next = 0;
     int current_pid = current_process->pid;
@@ -29,5 +38,8 @@ void schedule(struct registers *r) {
     next->state = PROCESS_STATE_RUNNING;
     current_process = next;
 
+    if (next->type == PROCESS_TYPE_USER) {
+        tss_set_kernel_stack((unsigned int)(next->kernel_stack + KERNEL_STACK_SIZE));
+    }
     switch_context(&prev->esp, next->esp, (unsigned int)next->page_dir);
 }

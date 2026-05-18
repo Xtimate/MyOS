@@ -1,5 +1,7 @@
 global switch_context
 global process_start
+global process_start_asm
+global kernel_thread_start
 
 switch_context:
     mov edx, [esp + 4]
@@ -12,11 +14,7 @@ switch_context:
 
     ret
 
-process_start:
-    mov eax, [esp + 4]
-    mov ebx, [esp + 8]
-    mov esp, eax
-    mov cr3, ebx
+process_start_asm:
     pop gs
     pop fs
     pop es
@@ -24,3 +22,8 @@ process_start:
     popa
     add esp, 8
     iret
+
+kernel_thread_start:
+    mov eax, [esp + 4]
+    mov esp, eax
+    ret

@@ -5,6 +5,10 @@
 
 static unsigned int ticks = 0;
 
+static void outb(unsigned short port, unsigned char val) {
+    __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
 static void timer_handler(struct registers *r) {
     ticks++;
     schedule(r);
