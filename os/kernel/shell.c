@@ -1,9 +1,12 @@
 #include "shell.h"
+#include "include/process.h"
+#include "include/vga.h"
 #include "vga.h"
 #include "kmalloc.h"
 #include "timer.h"
 #include "kstring.h"
 #include "exec.h"
+#include "process.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -29,6 +32,7 @@ static void cmd_echo(int argc, char **argv);
 static void cmd_color(int argc, char **argv);
 static void cmd_meminfo(int argc, char **argv);
 static void cmd_exec(int argc, char **argv);
+static void cmd_ps(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -40,6 +44,7 @@ static struct command commands[] = {
     { "color", cmd_color },
     { "meminfo", cmd_meminfo },
     { "exec", cmd_exec },
+    { "ps", cmd_ps },
     { 0, 0 }  // null terminator
 };
 
@@ -136,6 +141,28 @@ static void cmd_exec(int argc, char **argv) {
     }
     vga_print("\n");
     exec(argv[1]);
+}
+
+static void cmd_ps(int argc, char **argv) {
+    vga_print("\nPID  TYPE    STATE\n");
+    vga_print("---  ------  -----\n");
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (processes[i].state == PROCESS_STATE_FREE) continue;
+
+        vga_print_num(processes[i].pid);
+        vga_print("    ");
+
+        if (processes[i].type == PROCESS_TYPE_KERNEL)
+            vga_print("kernel  ");
+        else
+            vga_print("user  ");
+
+        switch (processes[i].state) {
+            case PROCESS_STATE_READY: vga_print("ready");  break;
+            case PROCESS_STATE_RUNNING: vga_print("running"); break;
+            default: vga_print("unknown"); break;
+        }
+    }
 }
 
 static void shell_execute(char *input) {
