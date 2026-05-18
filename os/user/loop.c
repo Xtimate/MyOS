@@ -8,6 +8,6 @@ void _start() {
             "int $0x80\n"
             : : "r"(str) : "eax"
         );
-        for (volatile int i = 0; i < 50000000; i++);
+        for (volatile int i = 0; i < 500000000; i++);
     }
 }

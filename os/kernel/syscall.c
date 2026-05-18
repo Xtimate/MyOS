@@ -13,8 +13,6 @@ static void outb(unsigned short port, unsigned char val) {
 }
 
 static void sys_print(struct registers *r) {
-    vga_print_hex(r->ebx);
-    vga_print("\n");
     char *str = (char *)r->ebx;
     vga_print(str);
 }

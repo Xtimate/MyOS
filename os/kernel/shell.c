@@ -162,6 +162,7 @@ static void cmd_ps(int argc, char **argv) {
             case PROCESS_STATE_RUNNING: vga_print("running"); break;
             default: vga_print("unknown"); break;
         }
+        vga_print("\n");
     }
 }
 

@@ -13,11 +13,6 @@ static void outb(unsigned short port, unsigned char val) {
 
 static void timer_handler(struct registers *r) {
     ticks++;
-    if (ticks % 500 == 0) {
-        vga_print("kb: ");
-        vga_print_num(kb_count);
-        vga_print("\n");
-    }
     schedule(r);
 }
 

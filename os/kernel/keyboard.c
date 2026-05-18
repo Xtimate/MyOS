@@ -1,11 +1,8 @@
 #include "keyboard.h"
 #include "irq.h"
 #include "shell.h"
-#include "timer.h"
 
 #define KEYBOARD_DATA_PORT 0x60
-
-extern int kb_count;
 
 static const char scancode_map[] = {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0,
@@ -22,7 +19,6 @@ static unsigned char inb(unsigned short port) {
 }
 
 static void keyboard_handler(struct registers *r) {
-    kb_count++;
     unsigned char scancode = inb(KEYBOARD_DATA_PORT);
     if (scancode & 0x80) return;
 
