@@ -5,6 +5,7 @@
 
 #define SYSCALL_PRINT 0
 #define SYSCALL_EXIT 1
+#define SYSCALL_READ 2
 
 void syscall_handler(struct registers *r);
 void syscall_install();

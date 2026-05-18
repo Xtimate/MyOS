@@ -14,6 +14,7 @@
 #include "elf.h"
 #include "fs.h"
 #include "process.h"
+#include "input.h"
 
 extern char fs_archive_start;
 extern char fs_archive_end;
@@ -35,6 +36,7 @@ void kernel_main() {
     kmalloc_init(0xC0500000, 0xC0600000);
     paging_init();
     process_init();
+    input_init();
 
     __asm__ volatile ("sti");
 
