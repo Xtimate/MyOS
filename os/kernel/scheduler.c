@@ -10,10 +10,13 @@ void schedule(struct registers *r) {
         for (int i = 0; i < MAX_PROCESSES; i++) {
             if (processes[i].state == PROCESS_STATE_READY) {
                 current_process = &processes[i];
+                current_process->state = PROCESS_STATE_RUNNING;
                 break;
             }
         }
         if (current_process == 0) return;
+        paging_switch((unsigned int)current_process->page_dir);
+        return;
     }
 
     process_t *next = 0;
@@ -31,9 +34,11 @@ void schedule(struct registers *r) {
 
     if (next == 0 || next == current_process) return;
 
-    process_t *prev = current_process;
-    if (prev->state == PROCESS_STATE_RUNNING)
-        prev->state = PROCESS_STATE_READY;
+    current_process->regs = *r;
+    if (current_process->state == PROCESS_STATE_RUNNING)
+        current_process->state = PROCESS_STATE_READY;
+
+    *r = next->regs;
 
     next->state = PROCESS_STATE_RUNNING;
     current_process = next;
@@ -41,5 +46,5 @@ void schedule(struct registers *r) {
     if (next->type == PROCESS_TYPE_USER) {
         tss_set_kernel_stack((unsigned int)(next->kernel_stack + KERNEL_STACK_SIZE));
     }
-    switch_context(&prev->esp, next->esp, (unsigned int)next->page_dir);
+    paging_switch((unsigned int)next->page_dir);
 }

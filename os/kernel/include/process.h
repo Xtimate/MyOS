@@ -19,6 +19,7 @@ typedef struct {
     unsigned int state;
     unsigned int type;
     unsigned int esp;
+    struct registers regs;
     unsigned int *page_dir;
     unsigned char kernel_stack[KERNEL_STACK_SIZE];
 } process_t;

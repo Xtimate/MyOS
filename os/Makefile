@@ -1,6 +1,6 @@
 CC = gcc
 AS = nasm
-CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib -Ikernel/include
+CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib -Ikernel/include -mno-sse
 
 user/hello:
 	$(CC) -m32 -nostdlib -nostartfiles -static -fno-pic -T user/user.ld -o user/hello user/hello.c

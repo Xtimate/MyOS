@@ -15,11 +15,8 @@
 #include "fs.h"
 #include "process.h"
 
-#define USER_STACK_TOP 0x00300000
-
 extern char fs_archive_start;
 extern char fs_archive_end;
-extern void kernel_thread_start(unsigned int new_esp);
 
 void shell_thread() {
     shell_init();
@@ -47,6 +44,5 @@ void kernel_main() {
     current_process = shell;
     shell->state = PROCESS_STATE_RUNNING;
 
-    kernel_thread_start(shell->esp);
-    while (1) {}
+    shell_thread();
 }

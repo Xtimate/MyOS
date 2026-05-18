@@ -118,11 +118,14 @@ void fault_handler(struct registers *r) {
     if (r->int_no == 14) {
         unsigned int cr2;
         __asm__ volatile ("mov %%cr2, %0" : "=r"(cr2));
-
         vga_print("\nCR2: ");
         vga_print_hex(cr2);
-        vga_print("\nEIP: ");
-        vga_print_hex(r->eip);
     }
+
+    vga_print("\nEIP: ");
+    vga_print_hex(r->eip);
+    vga_print("\nCS: ");
+    vga_print_hex(r->cs);
+
     while (1) {}
 }

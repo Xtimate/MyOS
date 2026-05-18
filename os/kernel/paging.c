@@ -68,6 +68,14 @@ unsigned int *paging_create_directory() {
 
     dir[0] = upt_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
+    unsigned int *upt2 = (unsigned int *)paging_alloc_frame();
+    unsigned int upt2_phys = (unsigned int)upt2 - 0xC0000000;
+
+    for (int i = 0; i < 1024; i++)
+        upt2[i] = upt2_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
+
+    dir[1] = upt2_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
+
     return (unsigned int *)dir_phys;
 }
 
