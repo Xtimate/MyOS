@@ -33,6 +33,7 @@ static void cmd_color(int argc, char **argv);
 static void cmd_meminfo(int argc, char **argv);
 static void cmd_exec(int argc, char **argv);
 static void cmd_ps(int argc, char **argv);
+static void cmd_kill(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -45,6 +46,7 @@ static struct command commands[] = {
     { "meminfo", cmd_meminfo },
     { "exec", cmd_exec },
     { "ps", cmd_ps },
+    { "kill", cmd_kill },
     { 0, 0 }  // null terminator
 };
 
@@ -164,6 +166,36 @@ static void cmd_ps(int argc, char **argv) {
         }
         vga_print("\n");
     }
+}
+
+static void cmd_kill(int argc, char **argv) {
+    if (argc < 2) {
+        vga_print("Usage: kill <pid>\n");
+        return;
+    }
+
+    int pid = 0;
+    char *s = argv[1];
+    while (*s >= '0' && *s <= '9') {
+        pid = pid * 10 + (*s - '0');
+        s++;
+    }
+
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (processes[i].pid ==(unsigned int)pid) {
+            if (processes[i].type == PROCESS_TYPE_KERNEL) {
+                vga_print("\nkill: cannot kill kernel process\n");
+                return;
+            }
+            process_exit(&processes[i]);
+            vga_print("killed process ");
+            vga_print_num(pid);
+            vga_print("\n");
+            return;
+        }
+    }
+
+    vga_print("kill: no such process\n");
 }
 
 static void shell_execute(char *input) {
