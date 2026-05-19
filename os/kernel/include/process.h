@@ -15,6 +15,15 @@
 #define PROCESS_TYPE_USER 0
 #define PROCESS_TYPE_KERNEL 1
 
+#define MAX_FDS 16
+
+typedef struct {
+    char *data;
+    unsigned int size;
+    unsigned int offset;
+    int used;
+} fd_t;
+
 typedef struct {
     unsigned int pid;
     unsigned int state;
@@ -23,6 +32,8 @@ typedef struct {
     struct registers regs;
     unsigned int *page_dir;
     unsigned char kernel_stack[KERNEL_STACK_SIZE];
+    unsigned int brk;
+    fd_t fds[MAX_FDS];
 } process_t;
 
 extern process_t processes[MAX_PROCESSES];

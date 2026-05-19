@@ -5,14 +5,20 @@ CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib -Ikernel/include -mn
 user/hello:
 	$(CC) -m32 -nostdlib -nostartfiles -static -fno-pic -T user/user.ld -o user/hello user/hello.c
 
-fs.tar: user/hello user/loop user/inp
-	cd user && tar cf ../fs.tar hello loop inp
+fs.tar: user/hello user/loop user/inp user/filetest user/brktest
+	cd user && tar cf ../fs.tar hello loop inp filetest hello.txt brktest
 
 user/inp:
 	$(CC) -m32 -nostdlib -nostartfiles -static -fno-pic -T user/user.ld -o user/inp user/inp.c
 
 user/loop:
 	$(CC) -m32 -nostdlib -nostartfiles -static -fno-pic -T user/user.ld -o user/loop user/loop.c
+
+user/filetest:
+	$(CC) -m32 -nostdlib -nostartfiles -static -fno-pic -fno-stack-protector -T user/user.ld -o user/filetest user/filetest.c
+
+user/brktest:
+	$(CC) -m32 -nostdlib -nostartfiles -static -fno-pic -fno-stack-protector -T user/user.ld -o user/brktest user/brktest.c
 
 kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/exec.c kernel/process.c kernel/scheduler.c kernel/arch/fs_bin.asm kernel/arch/switch.asm kernel/input.c kernel/kernel.c
 	$(AS) -f elf32 kernel/arch/boot.asm -o kernel/arch/boot.o
@@ -52,4 +58,4 @@ iso: kernel/kernel.bin
 run: iso
 	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown
 clean:
-	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso user/hello user/loop user/inp fs.tar
+	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso user/hello user/loop user/inp user/filetest user/brktest fs.tar

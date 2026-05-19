@@ -44,12 +44,21 @@ process_t *process_create(void *elf_data) {
     proc->page_dir = paging_create_directory();
     unsigned int pd_phys = (unsigned int)proc->page_dir;
 
-    unsigned int entry = elf_load(elf_data, pd_phys);
+    unsigned int brk = 0;
+    unsigned int entry = elf_load(elf_data, pd_phys, &brk);
 
     if (entry == 0) {
         vga_print("process_create: ELF load failed\n");
         proc->state = PROCESS_STATE_FREE;
         return 0;
+    }
+
+    proc->brk = brk;
+    for (int i = 0; i < MAX_FDS; i++) {
+        proc->fds[i].used = 0;
+        proc->fds[i].data = 0;
+        proc->fds[i].size = 0;
+        proc->fds[i].offset = 0;
     }
 
     unsigned int user_stack = alloc_user_stack(pd_phys);
