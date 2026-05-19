@@ -6,6 +6,7 @@
 
 process_t processes[MAX_PROCESSES];
 process_t *current_process = 0;
+int foreground_pid;
 
 #define USER_STACK_BASE 0x00300000
 #define USER_STACK_SIZE 0x001000

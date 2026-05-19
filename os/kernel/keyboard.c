@@ -33,6 +33,7 @@ static void keyboard_handler(struct registers *r) {
 
     if (scancode & 0x80) return;
 
+    // Ctrl+C: kill all user processes
     if (ctrl_held && scancode == 0x2E) {
         for (int i = 0; i < MAX_PROCESSES; i++) {
             if (processes[i].type == PROCESS_TYPE_USER && processes[i].state != PROCESS_STATE_FREE) {
@@ -40,7 +41,15 @@ static void keyboard_handler(struct registers *r) {
             }
         }
         input_init();
+        foreground_pid = -1;
         vga_print("\n^C\n");
+        return;
+    }
+
+    // Ctrl+Z: give focus back to shell
+    if (ctrl_held && scancode == 0x2C) {
+        foreground_pid = -1;
+        vga_print("\n[shell]\n");
         return;
     }
 
@@ -51,18 +60,16 @@ static void keyboard_handler(struct registers *r) {
 
     if (c == 0) return;
 
-    // check if any user process exists (running or blocked)
-    int has_user_process = 0;
-    for (int i = 0; i < MAX_PROCESSES; i++) {
-        if (processes[i].state != PROCESS_STATE_FREE &&
-            processes[i].type == PROCESS_TYPE_USER) {
-            if (processes[i].state == PROCESS_STATE_BLOCKED)
+    // route to foreground
+    if (foreground_pid != -1) {
+        // unblock the foreground process if it's waiting on input
+        for (int i = 0; i < MAX_PROCESSES; i++) {
+            if (processes[i].pid == foreground_pid &&
+                processes[i].state == PROCESS_STATE_BLOCKED) {
                 processes[i].state = PROCESS_STATE_READY;
-            has_user_process = 1;
+                break;
+            }
         }
-    }
-
-    if (has_user_process) {
         input_putchar(c);
         return;
     }

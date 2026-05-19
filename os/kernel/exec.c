@@ -20,4 +20,5 @@ void exec(const char *name) {
     proc->state = PROCESS_STATE_READY;
     if (current_process)
         current_process->state = PROCESS_STATE_READY;
+    foreground_pid = proc->pid;
 }

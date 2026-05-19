@@ -27,6 +27,7 @@ typedef struct {
 
 extern process_t processes[MAX_PROCESSES];
 extern process_t *current_process;
+extern int foreground_pid;
 
 void process_init();
 process_t *process_create(void *elf_data);
