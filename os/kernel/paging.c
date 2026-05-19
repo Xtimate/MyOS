@@ -82,3 +82,31 @@ unsigned int *paging_create_directory() {
 void paging_switch(unsigned int pd_phys) {
     __asm__ volatile ("mov %0, %%cr3" : : "r"(pd_phys));
 }
+
+void paging_map_page(unsigned int pd_phys, unsigned int virt, unsigned int phys) {
+
+    unsigned int *dir = (unsigned int *)(pd_phys + 0xC0000000);
+
+    unsigned int pd_index = virt >> 22;
+    unsigned int pt_index = (virt >> 22) & 0x3FF;
+
+    if (!(dir[pd_index] & PAGE_PRESENT)) {
+        unsigned int *pt = (unsigned int *)paging_alloc_frame();
+        unsigned int pt_phys = (unsigned int)pt - 0xC0000000;
+        for (int i = 0; i < 1024; i++) pt[i] = 0;
+        dir[pd_index] = pt_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
+    }
+
+    unsigned int pt_phys = dir[pd_index] & ~0xFFF;
+    unsigned int *pt = (unsigned int *)(pt_phys + 0xC0000000);
+
+    pt[pt_index] = (phys & ~0xFFF) | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
+}
+
+static unsigned int phys_bump = 0x00600000;
+
+unsigned int paging_alloc_phys_frame() {
+    unsigned int phys = phys_bump;
+    phys_bump += 4096;
+    return phys;
+}

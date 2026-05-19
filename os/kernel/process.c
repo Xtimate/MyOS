@@ -8,15 +8,13 @@ process_t processes[MAX_PROCESSES];
 process_t *current_process = 0;
 int foreground_pid = -1;
 
-#define USER_STACK_BASE 0x00300000
 #define USER_STACK_SIZE 0x001000
+#define USER_STACK_VIRT 0x00300000
 
-static unsigned int next_user_stack = USER_STACK_BASE;
-
-static unsigned int alloc_user_stack() {
-    unsigned int stack = next_user_stack + USER_STACK_SIZE;
-    next_user_stack += USER_STACK_SIZE;
-    return stack;
+static unsigned int alloc_user_stack(unsigned int pd_phys) {
+    unsigned int phys = paging_alloc_phys_frame();
+    paging_map_page(pd_phys, USER_STACK_VIRT, phys);
+    return USER_STACK_VIRT + USER_STACK_SIZE;
 }
 
 void process_init() {
@@ -44,8 +42,9 @@ process_t *process_create(void *elf_data) {
 
     proc->type = PROCESS_TYPE_USER;
     proc->page_dir = paging_create_directory();
+    unsigned int pd_phys = (unsigned int)proc->page_dir;
 
-    unsigned int entry = elf_load(elf_data);
+    unsigned int entry = elf_load(elf_data, pd_phys);
 
     if (entry == 0) {
         vga_print("process_create: ELF load failed\n");
@@ -53,7 +52,7 @@ process_t *process_create(void *elf_data) {
         return 0;
     }
 
-    unsigned int user_stack = alloc_user_stack();
+    unsigned int user_stack = alloc_user_stack(pd_phys);
 
     proc->regs.gs = 0x23;
     proc->regs.fs = 0x23;

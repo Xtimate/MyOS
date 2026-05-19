@@ -38,6 +38,6 @@ typedef struct {
     unsigned int p_align;
 } __attribute__((packed)) elf32_phdr_t;
 
-unsigned int elf_load(void *elf_data);
+unsigned int elf_load(void *elf_data, unsigned int pd_phys);
 
 #endif

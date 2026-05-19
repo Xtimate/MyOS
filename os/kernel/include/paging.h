@@ -5,5 +5,7 @@ void paging_init();
 unsigned int paging_alloc_frame();
 unsigned int *paging_create_directory();
 void paging_switch(unsigned int pd_phys);
+void paging_map_page(unsigned int pd_phys, unsigned int virt, unsigned int phys);
+unsigned int paging_alloc_phys_frame();
 extern unsigned int page_directory[1024];
 #endif
