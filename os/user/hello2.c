@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void _start() {
+void _start(int argc, char **argv) {
     printf("hello from newlib!\n");
 
     // test malloc

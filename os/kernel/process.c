@@ -3,6 +3,9 @@
 #include "include/elf.h"
 #include "include/vga.h"
 #include "include/kstring.h"
+#include "include/shell.h";
+
+#define MAX_ARGS 16
 
 process_t processes[MAX_PROCESSES];
 process_t *current_process = 0;
@@ -25,7 +28,7 @@ void process_init() {
     }
 }
 
-process_t *process_create(void *elf_data) {
+process_t *process_create(void *elf_data, int argc, char **argv) {
     process_t *proc = 0;
     for (int i = 0; i < MAX_PROCESSES; i++) {
         if (processes[i].state == PROCESS_STATE_FREE) {
@@ -44,6 +47,7 @@ process_t *process_create(void *elf_data) {
     proc->page_dir = paging_create_directory();
     unsigned int pd_phys = (unsigned int)proc->page_dir;
 
+    unsigned int i;
     unsigned int brk = 0;
     unsigned int entry = elf_load(elf_data, pd_phys, &brk);
 
@@ -63,6 +67,42 @@ process_t *process_create(void *elf_data) {
 
     unsigned int user_stack = alloc_user_stack(pd_phys);
 
+    unsigned int old_cr3;
+    __asm__ volatile ("mov %%cr3, %0" : "=r"(old_cr3));
+    paging_switch(pd_phys);
+
+    unsigned int sp = user_stack;
+    char *argv_ptrs[MAX_ARGS];
+
+    for (int i = argc - 1; i >= 0; i--) {
+        unsigned int len = kstrlen(argv[i]) + 1;
+        sp -= len;
+        kmemcpy((void *)sp, argv[i], len);
+        argv_ptrs[i] = (char *)sp;
+    }
+
+    sp &= ~3;
+
+    sp -= 4;
+    *(unsigned int *)sp = 0;
+
+    for (int i = argc - 1; i >= 0; i--) {
+        sp -= 4;
+        *(unsigned int *)sp = (unsigned int)argv_ptrs[i];
+    }
+
+    unsigned int argv_ptr = sp;
+
+    sp -= 4;
+    *(unsigned int *)sp = argv_ptr;
+    sp -= 4;
+    *(unsigned int *)sp = (unsigned int)argc;
+
+    sp -= 4;
+    *(unsigned int *)sp = 0;
+
+    paging_switch(old_cr3);
+
     proc->regs.gs = 0x23;
     proc->regs.fs = 0x23;
     proc->regs.es = 0x23;
@@ -80,7 +120,7 @@ process_t *process_create(void *elf_data) {
     proc->regs.eip = entry;
     proc->regs.cs = 0x1B;
     proc->regs.eflags = 0x202;
-    proc->regs.useresp = user_stack;
+    proc->regs.useresp = sp;
     proc->regs.ss = 0x23;
 
     proc->esp = 0;

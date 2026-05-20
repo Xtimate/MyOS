@@ -16,7 +16,7 @@ void reverse(char *s) {
     }
 }
 
-void _start() {
+void _start(int argc, char **argv) {
     // test printf with formatting
     printf("--- complex test ---\n");
 

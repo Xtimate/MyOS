@@ -1,12 +1,12 @@
-#include "shell.h"
+#include "include/shell.h"
 #include "include/process.h"
 #include "include/vga.h"
-#include "vga.h"
-#include "kmalloc.h"
-#include "timer.h"
-#include "kstring.h"
-#include "exec.h"
-#include "process.h"
+#include "include/vga.h"
+#include "include/kmalloc.h"
+#include "include/timer.h"
+#include "include/kstring.h"
+#include "include/exec.h"
+#include "include/process.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -142,7 +142,7 @@ static void cmd_exec(int argc, char **argv) {
         return;
     }
     vga_print("\n");
-    exec(argv[1]);
+    exec(argv[1], argc -1, argv + 1);
 }
 
 static void cmd_ps(int argc, char **argv) {

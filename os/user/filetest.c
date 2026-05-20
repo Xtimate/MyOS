@@ -29,7 +29,7 @@ static void sys_exit() {
     __asm__ volatile ("int $0x80" : : "a"(1));
 }
 
-void _start() {
+void _start(int argc, char **argv) {
     int fd = sys_open("hello.txt");
     if (fd < 0) {
         sys_print("open failed\n");

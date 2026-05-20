@@ -26,7 +26,7 @@ static void print_num(unsigned int n) {
     sys_print(&buf[i + 1]);
 }
 
-void _start() {
+void _start(int argc, char **argv) {
     // get current brk
     unsigned int cur = sys_brk(0);
     sys_print("initial brk: ");

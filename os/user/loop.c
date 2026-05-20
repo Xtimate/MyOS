@@ -1,6 +1,6 @@
 static const char msg[] = "loop\n";
 
-void _start() {
+void _start(int argc, char **argv) {
     while (1) {
         register const char *str asm("ebx") = msg;
         __asm__ volatile (

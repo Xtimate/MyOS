@@ -1,6 +1,6 @@
 static const char msg[] = "Hello from user space!\n";
 
-void _start() {
+void _start(int argc, char **argv) {
     __asm__ volatile (
         "mov $0, %%eax\n"
         "mov %0, %%ebx\n"

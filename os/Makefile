@@ -31,8 +31,11 @@ user/hello2: user/syscalls.o
 user/complex: user/complex.o
 	$(UCC) $(UCFLAGS) -T user/user.ld -o user/complex user/complex.c user/syscalls.o $(NEWLIB)/lib/libc.a
 
-fs.tar: user/hello user/loop user/inp user/filetest user/brktest user/hello2 user/complex
-	cd user && tar cf ../fs.tar hello loop inp filetest hello.txt brktest hello2 complex
+user/args: user/args.o
+	$(UCC) $(UCFLAGS) -T user/user.ld -o user/args user/args.c user/syscalls.o $(NEWLIB)/lib/libc.a
+
+fs.tar: user/hello user/loop user/inp user/filetest user/brktest user/hello2 user/complex user/args
+	cd user && tar cf ../fs.tar hello loop inp filetest hello.txt brktest hello2 complex args
 
 kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/exec.c kernel/process.c kernel/scheduler.c kernel/arch/fs_bin.asm kernel/arch/switch.asm kernel/input.c kernel/kernel.c
 	$(AS) -f elf32 kernel/arch/boot.asm -o kernel/arch/boot.o
@@ -75,4 +78,4 @@ run: iso
 	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown
 
 clean:
-	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso user/hello user/loop user/inp user/filetest user/brktest user/syscalls.o user/hello2 user/complex fs.tar
+	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso user/hello user/loop user/inp user/filetest user/brktest user/syscalls.o user/hello2 user/complex user/args user/args.o fs.tar

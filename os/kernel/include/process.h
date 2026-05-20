@@ -41,7 +41,7 @@ extern process_t *current_process;
 extern int foreground_pid;
 
 void process_init();
-process_t *process_create(void *elf_data);
+process_t *process_create(void *elf_data, int argc, char **argv);
 void process_exit(process_t *proc);
 void schedule(struct registers *r);
 process_t *process_create_kernel(void (*func)());

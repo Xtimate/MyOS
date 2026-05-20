@@ -3,7 +3,7 @@
 #include "include/vga.h"
 #include "include/process.h"
 
-void exec(const char *name) {
+void exec(const char *name, int argc, char **argv) {
     vga_print("exec called\n");
     fs_file_t f = fs_open(name);
     if (f.data == 0) {
@@ -11,7 +11,7 @@ void exec(const char *name) {
         return;
     }
 
-    process_t *proc = process_create(f.data);
+    process_t *proc = process_create(f.data, argc, argv);
     if (proc == 0) {
         vga_print("exec: failed to create process\n");
         return;

@@ -3,7 +3,7 @@ static const char prompt[] = "enter a key: \n";
 static const char got[] = "you pressed: ";
 static const char newline[] = "\n";
 
-void _start() {
+void _start(int argc, char **argv) {
     while (1) {
         register const char *str asm("ebx") = prompt;
         __asm__ volatile ("mov $0, %%eax\n int $0x80\n" : : "r"(str) : "eax");
