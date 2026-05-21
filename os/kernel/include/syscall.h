@@ -10,6 +10,7 @@
 #define SYSCALL_CLOSE 4
 #define SYSCALL_WRITE 5
 #define SYSCALL_BRK  6
+#define SYSCALL_SLEEP 7
 
 void syscall_handler(struct registers *r);
 void syscall_install();

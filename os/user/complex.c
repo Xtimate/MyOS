@@ -16,37 +16,26 @@ void reverse(char *s) {
     }
 }
 
-void _start(int argc, char **argv) {
-    // test printf with formatting
+int main(int argc, char **argv) {
     printf("--- complex test ---\n");
-
-    // test factorial (recursion + arithmetic)
     for (int i = 1; i <= 8; i++) {
         printf("%d! = %d\n", i, factorial(i));
     }
-
-    // test malloc + realloc + string ops
     char *buf = malloc(16);
     strcpy(buf, "hello");
     buf = realloc(buf, 32);
     strcat(buf, " world");
     printf("string: %s\n", buf);
-
-    // test reverse
     reverse(buf);
     printf("reversed: %s\n", buf);
-
-    // test a dynamic array
     int n = 10;
     int *arr = malloc(n * sizeof(int));
     for (int i = 0; i < n; i++) arr[i] = i * i;
     printf("squares: ");
     for (int i = 0; i < n; i++) printf("%d ", arr[i]);
     printf("\n");
-
     free(arr);
     free(buf);
-
     printf("--- done ---\n");
-    exit(0);
+    return 0;
 }

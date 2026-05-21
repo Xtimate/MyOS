@@ -1,13 +1,9 @@
-static const char msg[] = "loop\n";
+#include <stdio.h>
 
-void _start(int argc, char **argv) {
+int main(int argc, char **argv) {
     while (1) {
-        register const char *str asm("ebx") = msg;
-        __asm__ volatile (
-            "mov $0, %%eax\n"
-            "int $0x80\n"
-            : : "r"(str) : "eax"
-        );
+        printf("loop\n");
         for (volatile int i = 0; i < 500000000; i++);
     }
+    return 0;
 }

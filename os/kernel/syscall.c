@@ -7,6 +7,7 @@
 #include "include/process.h"
 #include "include/input.h"
 #include "include/fs.h"
+#include "include/timer.h"
 
 extern void isr128();
 extern void kernel_thread_start(unsigned int new_esp);
@@ -139,6 +140,23 @@ static void sys_brk(struct registers *r) {
 
     current_process->brk = new_brk;
     r->eax = new_brk;
+
+}
+
+static void sys_sleep(struct registers *r) {
+    unsigned int ms = r->ebx;
+    if (!current_process) return;
+
+    unsigned int ticks_to_wait = ms / 10;
+    unsigned int current = timer_ticks();
+    unsigned int wake = current + ticks_to_wait;
+
+    vga_print("ticks now: "); vga_print_num(current); vga_print("\n");
+    vga_print("wake at: "); vga_print_num(wake); vga_print("\n");
+
+    current_process->wake_tick = wake;
+    current_process->state = PROCESS_STATE_SLEEPING;
+    r->eax = 0;
 }
 
 void syscall_handler(struct registers *r) {
@@ -150,6 +168,7 @@ void syscall_handler(struct registers *r) {
         case SYSCALL_CLOSE: sys_close(r); break;
         case SYSCALL_WRITE: sys_write(r); break;
         case SYSCALL_BRK: sys_brk(r); break;
+        case SYSCALL_SLEEP: sys_sleep(r); break;
         default:
             vga_print("\nunknown syscall\n");
             break;

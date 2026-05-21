@@ -1,7 +1,7 @@
-#include "timer.h"
-#include "irq.h"
-#include "vga.h"
-#include "process.h"
+#include "include/timer.h"
+#include "include/irq.h"
+#include "include/vga.h"
+#include "include/process.h"
 
 int kb_count = 0;
 
@@ -13,6 +13,13 @@ static void outb(unsigned short port, unsigned char val) {
 
 static void timer_handler(struct registers *r) {
     ticks++;
+
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (processes[i].state == PROCESS_STATE_SLEEPING && ticks >= processes[i].wake_tick) {
+            processes[i].state = PROCESS_STATE_READY;
+        }
+    }
+
     schedule(r);
 }
 

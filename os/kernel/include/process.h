@@ -11,6 +11,7 @@
 #define PROCESS_STATE_RUNNING 2
 #define PROCESS_STATE_DEAD 3
 #define PROCESS_STATE_BLOCKED 4
+#define PROCESS_STATE_SLEEPING 5
 
 #define PROCESS_TYPE_USER 0
 #define PROCESS_TYPE_KERNEL 1
@@ -34,6 +35,7 @@ typedef struct {
     unsigned char kernel_stack[KERNEL_STACK_SIZE];
     unsigned int brk;
     fd_t fds[MAX_FDS];
+    unsigned int wake_tick;
 } process_t;
 
 extern process_t processes[MAX_PROCESSES];

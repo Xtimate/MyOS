@@ -1,21 +1,6 @@
-static const char msg[] = "Hello from user space!\n";
+#include <stdio.h>
 
-void _start(int argc, char **argv) {
-    __asm__ volatile (
-        "mov $0, %%eax\n"
-        "mov %0, %%ebx\n"
-        "int $0x80\n"
-        :
-        : "r"(msg)
-        : "eax", "ebx"
-    );
-
-    __asm__ volatile (
-        "mov $1, %%eax\n"
-        "xor %%ebx, %%ebx\n"
-        "int $0x80\n"
-        ::: "eax", "ebx"
-    );
-
-    while (1) {}
+int main(int argc, char **argv) {
+    printf("Hello from user space!\n");
+    return 0;
 }
