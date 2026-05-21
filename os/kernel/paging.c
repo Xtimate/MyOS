@@ -68,14 +68,6 @@ unsigned int *paging_create_directory() {
 
     dir[0] = upt_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
-    unsigned int *upt2 = (unsigned int *)paging_alloc_frame();
-    unsigned int upt2_phys = (unsigned int)upt2 - 0xC0000000;
-
-    for (int i = 0; i < 1024; i++)
-        upt2[i] = upt2_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
-
-    dir[1] = upt2_phys | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
-
     return (unsigned int *)dir_phys;
 }
 
@@ -88,7 +80,7 @@ void paging_map_page(unsigned int pd_phys, unsigned int virt, unsigned int phys)
     unsigned int *dir = (unsigned int *)(pd_phys + 0xC0000000);
 
     unsigned int pd_index = virt >> 22;
-    unsigned int pt_index = (virt >> 22) & 0x3FF;
+    unsigned int pt_index = (virt >> 12) & 0x3FF;
 
     if (!(dir[pd_index] & PAGE_PRESENT)) {
         unsigned int *pt = (unsigned int *)paging_alloc_frame();
@@ -103,7 +95,7 @@ void paging_map_page(unsigned int pd_phys, unsigned int virt, unsigned int phys)
     pt[pt_index] = (phys & ~0xFFF) | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 }
 
-static unsigned int phys_bump = 0x00600000;
+static unsigned int phys_bump = 0x01000000;
 
 unsigned int paging_alloc_phys_frame() {
     unsigned int phys = phys_bump;
