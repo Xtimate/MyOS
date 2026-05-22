@@ -36,6 +36,7 @@ static void cmd_exec(int argc, char **argv);
 static void cmd_ps(int argc, char **argv);
 static void cmd_kill(int argc, char **argv);
 static void cmd_cat(int argc, char **argv);
+static void cmd_fg(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -50,6 +51,7 @@ static struct command commands[] = {
     { "ps", cmd_ps },
     { "kill", cmd_kill },
     { "cat", cmd_cat },
+    { "fg", cmd_fg },
     { 0, 0 }  // null terminator
 };
 
@@ -219,6 +221,35 @@ static void cmd_cat(int argc, char **argv) {
         vga_print(tmp);
     }
     vga_print("\n");
+}
+
+static void cmd_fg(int argc, char **argv) {
+    if (argc < 2) {
+        vga_print("\nUsage: fg <pid>\n");
+        return;
+    }
+
+    int pid = 0;
+    char *s = argv[1];
+    while (*s >= '0' && *s <= '9') {
+        pid = pid * 10 + (*s - '0');
+        s++;
+    }
+
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if ((int)processes[i].pid == pid && processes[i].state != PROCESS_STATE_FREE) {
+            if (processes[i].type != PROCESS_TYPE_KERNEL) {
+                foreground_pid = pid;
+                vga_print("\n");
+                return;
+            }
+            else {
+                vga_print("\nfg: can't switch to kernel\n");
+            }
+        }
+    }
+
+    vga_print("\nfg: no such process\n");
 }
 
 static void shell_execute(char *input) {
