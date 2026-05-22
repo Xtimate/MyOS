@@ -1,11 +1,11 @@
-#include "keyboard.h"
+#include "include/keyboard.h"
 #include "include/input.h"
 #include "include/process.h"
-#include "irq.h"
-#include "shell.h"
-#include "process.h"
-#include "input.h"
-#include "vga.h"
+#include "include/irq.h"
+#include "include/shell.h"
+#include "include/process.h"
+#include "include/input.h"
+#include "include/vga.h"
 
 #define KEYBOARD_DATA_PORT 0x60
 
@@ -75,11 +75,15 @@ static void keyboard_handler(struct registers *r) {
 
     // route to foreground
     if (foreground_pid != -1) {
-        // unblock the foreground process if it's waiting on input
         for (int i = 0; i < MAX_PROCESSES; i++) {
-            if (processes[i].pid == foreground_pid &&
-                processes[i].state == PROCESS_STATE_BLOCKED) {
-                processes[i].state = PROCESS_STATE_READY;
+            if (processes[i].pid == foreground_pid) {
+                if (processes[i].just_started) {
+                    processes[i].just_started = 0;
+                    return;
+                }
+                if (processes[i].state == PROCESS_STATE_BLOCKED) {
+                    processes[i].state = PROCESS_STATE_READY;
+                }
                 break;
             }
         }

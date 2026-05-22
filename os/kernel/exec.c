@@ -2,6 +2,7 @@
 #include "include/fs.h"
 #include "include/vga.h"
 #include "include/process.h"
+#include "include/input.h"
 
 void exec(const char *name, int argc, char **argv) {
     vga_print("exec called\n");
@@ -21,4 +22,5 @@ void exec(const char *name, int argc, char **argv) {
     if (current_process)
         current_process->state = PROCESS_STATE_READY;
     foreground_pid = proc->pid;
+    input_init();
 }

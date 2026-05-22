@@ -43,6 +43,8 @@ process_t *process_create(void *elf_data, int argc, char **argv) {
         return 0;
     }
 
+    proc->just_started = 1;
+
     proc->type = PROCESS_TYPE_USER;
     proc->page_dir = paging_create_directory();
     unsigned int pd_phys = (unsigned int)proc->page_dir;

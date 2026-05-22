@@ -59,8 +59,8 @@ static void sys_read(struct registers *r) {
         return;
     }
 
-    char *buf = (char *)r->ebx;
-    unsigned int max = r->ecx;
+    char *buf = (char *)r->ecx;
+    unsigned int max = r->edx;
 
     if (!input_available()) {
         if (current_process)
@@ -68,7 +68,6 @@ static void sys_read(struct registers *r) {
         r->eax = 0;
         return;
     }
-
     unsigned int i = 0;
     while (i < max && input_available()) {
         buf[i++] = input_getchar();

@@ -36,6 +36,7 @@ typedef struct {
     unsigned int brk;
     fd_t fds[MAX_FDS];
     unsigned int wake_tick;
+    int just_started;
 } process_t;
 
 extern process_t processes[MAX_PROCESSES];
