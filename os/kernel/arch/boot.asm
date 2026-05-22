@@ -24,6 +24,7 @@ global start
 extern kernel_main
 
 start:
+    mov edi, ebx
     mov dword [0x000B8000], 0x07530753  ; 'SS' white on black
     mov dword [0x000B8004], 0x07540754  ; 'TT'
     mov edi, boot_page_table
@@ -81,6 +82,7 @@ higher_half:
 
     push 0
     popf
+    push edi
     call kernel_main
     hlt
 
