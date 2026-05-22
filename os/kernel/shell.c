@@ -7,6 +7,7 @@
 #include "include/kstring.h"
 #include "include/exec.h"
 #include "include/process.h"
+#include "include/fs.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -34,6 +35,7 @@ static void cmd_meminfo(int argc, char **argv);
 static void cmd_exec(int argc, char **argv);
 static void cmd_ps(int argc, char **argv);
 static void cmd_kill(int argc, char **argv);
+static void cmd_cat(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -47,6 +49,7 @@ static struct command commands[] = {
     { "exec", cmd_exec },
     { "ps", cmd_ps },
     { "kill", cmd_kill },
+    { "cat", cmd_cat },
     { 0, 0 }  // null terminator
 };
 
@@ -196,6 +199,26 @@ static void cmd_kill(int argc, char **argv) {
     }
 
     vga_print("kill: no such process\n");
+}
+
+static void cmd_cat(int argc, char **argv) {
+    if (argc < 2) {
+        vga_print("\nUsage: cat <filename>\n");
+        return;
+    }
+
+    fs_file_t f = fs_open(argv[1]);
+    if (f.data == 0) {
+        vga_print("\ncat: file not found\n");
+        return;
+    }
+
+    vga_print("\n");
+    for (unsigned int i = 0; i < f.size; i++) {
+        char tmp[2] = { f.data[i], 0 };
+        vga_print(tmp);
+    }
+    vga_print("\n");
 }
 
 static void shell_execute(char *input) {

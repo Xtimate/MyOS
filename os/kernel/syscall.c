@@ -148,15 +148,11 @@ static void sys_sleep(struct registers *r) {
     if (!current_process) return;
 
     unsigned int ticks_to_wait = ms / 10;
-    unsigned int current = timer_ticks();
-    unsigned int wake = current + ticks_to_wait;
 
-    vga_print("ticks now: "); vga_print_num(current); vga_print("\n");
-    vga_print("wake at: "); vga_print_num(wake); vga_print("\n");
-
-    current_process->wake_tick = wake;
+    current_process->wake_tick = timer_ticks() + ticks_to_wait;
     current_process->state = PROCESS_STATE_SLEEPING;
     r->eax = 0;
+    schedule(r);
 }
 
 void syscall_handler(struct registers *r) {
