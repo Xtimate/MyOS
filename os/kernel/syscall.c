@@ -73,6 +73,7 @@ static void sys_read(struct registers *r) {
         buf[i++] = input_getchar();
     }
     r->eax = i;
+    vga_print("read "); vga_print_num(i); vga_print("chars, eax="); vga_print_num(r->eax); vga_print("\n");
 }
 
 static void sys_open(struct registers *r) {
