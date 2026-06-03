@@ -1,4 +1,3 @@
-#include "paging.h"
 #include "include/paging.h"
 
 #define PAGE_PRESENT 0x1
@@ -10,6 +9,8 @@
 
 #define PAGE_FRAME_START 0xC0400000
 #define PAGE_FRAME_PHYS 0x00400000
+
+#define FB_VIRT_BASE 0xFD000000
 
 unsigned int page_directory[1024] __attribute__((aligned(4096)));
 static unsigned int user_page_table[1024] __attribute__((aligned(4096)));
@@ -101,4 +102,16 @@ unsigned int paging_alloc_phys_frame() {
     unsigned int phys = phys_bump;
     phys_bump += 4096;
     return phys;
+}
+
+void paging_map_framebuffer(unsigned int phys, unsigned int size) {
+    unsigned int pd_phys = (unsigned int)page_directory - 0xC0000000;
+    unsigned int pages = (size + 0xFFF) / 0x1000;
+    for (unsigned int i = 0; i < pages; i++) {
+        paging_map_page(pd_phys, FB_VIRT_BASE + i *0x1000, phys + i * 0x1000);
+    }
+}
+
+unsigned int paging_get_fb_virt() {
+    return FB_VIRT_BASE;
 }

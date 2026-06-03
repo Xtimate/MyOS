@@ -10,8 +10,9 @@ PHDRS {
 SECTIONS {
     . = 0x100000;
 
-    .multiboot : { *(.multiboot) } :boot
-    .boot      : { *(.boot) }      :boot
+    .multiboot2 : { *(.multiboot2) } :boot
+    .multiboot  : { *(.multiboot) }  :boot
+    .boot       : { *(.boot) }       :boot
 
     . = 0xC0100000 + (. - 0x100000);
 

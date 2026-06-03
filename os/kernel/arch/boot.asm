@@ -1,9 +1,28 @@
 KERNEL_VIRTUAL_BASE equ 0xC0000000
 
-section .multiboot
-    dd 0x1BADB002
-    dd 0x00
-    dd -(0x1BADB002)
+section .multiboot2
+align 8
+mb2_start:
+    dd 0xE85250D6                          ; multiboot2 magic
+    dd 0                                   ; architecture: i386
+    dd mb2_end - mb2_start                 ; header length
+    dd -(0xE85250D6 + 0 + (mb2_end - mb2_start)) ; checksum
+
+    ; framebuffer tag
+    align 8
+    dw 5                                   ; type: framebuffer
+    dw 0                                   ; flags
+    dd 20                                  ; size
+    dd 1920                                ; width
+    dd 1080                                ; height
+    dd 32                                  ; depth
+
+    ; end tag
+    align 8
+    dw 0
+    dw 0
+    dd 8
+mb2_end:
 
 section .boot
 bits 32
@@ -24,9 +43,7 @@ global start
 extern kernel_main
 
 start:
-    mov edi, ebx
-    mov dword [0x000B8000], 0x07530753  ; 'SS' white on black
-    mov dword [0x000B8004], 0x07540754  ; 'TT'
+    mov ebp, ebx                           ; save mbi pointer in ebp
     mov edi, boot_page_table
     mov esi, 0
     mov ecx, 1024
@@ -62,8 +79,6 @@ start:
     mov ecx, boot_page_directory
     mov cr3, ecx
 
-    mov dword [0x000B8008], 0x07310731  ; '11' = CR3 loaded
-
     mov ecx, cr0
     or ecx, 0x80000000
     mov cr0, ecx
@@ -82,7 +97,8 @@ higher_half:
 
     push 0
     popf
-    push edi
+    push ebp      ; mbi pointer
+    push eax
     call kernel_main
     hlt
 

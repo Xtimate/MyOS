@@ -13,39 +13,25 @@
 #include "include/syscall.h"
 #include "include/elf.h"
 #include "include/fs.h"
-#include "include/process.h"
 #include "include/input.h"
 #include "include/framebuffer.h"
 
 typedef struct {
-    unsigned int flags;
-    unsigned int mem_lower;
-    unsigned int mem_upper;
-    unsigned int boot_device;
-    unsigned int cmdline;
-    unsigned int mods_count;
-    unsigned int mods_addr;
-    unsigned int syms[4];
-    unsigned int mmap_length;
-    unsigned int mmap_addr;
-    unsigned int drives_length;
-    unsigned int drive_addr;
-    unsigned int config_table;
-    unsigned int boot_loader_name;
-    unsigned int apm_table;
-    unsigned int vbe_control_info;
-    unsigned int vbe_mode_info;
-    unsigned short vbe_mode;
-    unsigned short vbe_interface_seg;
-    unsigned short vbe_interface_off;
-    unsigned short vbe_interface_len;
-    unsigned long long framebuffer_addr;
-    unsigned int framebuffer_pitch;
-    unsigned int framebuffer_width;
-    unsigned int framebuffer_height;
-    unsigned char framebuffer_bpp;
-    unsigned char framebuffer_type;
-} multiboot_info_t;
+    unsigned int type;
+    unsigned int size;
+} mb2_tag_t;
+
+typedef struct {
+    unsigned int type;
+    unsigned int size;
+    unsigned long long addr;
+    unsigned int pitch;
+    unsigned int width;
+    unsigned int height;
+    unsigned char bpp;
+    unsigned char fb_type;
+    unsigned short reserved;
+} mb2_tag_framebuffer_t;
 
 extern char fs_archive_start;
 extern char fs_archive_end;
@@ -55,52 +41,67 @@ void shell_thread() {
     while (1) { __asm__ volatile ("hlt"); }
 }
 
-void kernel_main(multiboot_info_t *mbi) {
+void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     vga_init();
-    vga_print("flags: ");
-    vga_print_num(mbi->flags);
-    vga_print("\n");
-    gdt_install();
-    vga_print("gdt ok\n");
-    idt_install();
-    vga_print("idt ok\n");
-    isr_install();
-    vga_print("isr ok\n");
-    syscall_install();
-    vga_print("syscall ok\n");
-    irq_install();
-    vga_print("irq ok\n");
-    keyboard_install();
-    vga_print("keyboard ok\n");
-    timer_install(100);
-    vga_print("timer ok\n");
-    kmalloc_init(0xC0500000, 0xC0600000);
-    vga_print("kmalloc ok\n");
-    paging_init();
-    vga_print("paging ok\n");
-    process_init();
-    vga_print("process ok\n");
-    input_init();
-    vga_print("input ok\n");
 
-    if (mbi->flags & (1 << 12)) {
+    gdt_install();
+    idt_install();
+    isr_install();
+    syscall_install();
+    irq_install();
+    keyboard_install();
+    timer_install(100);
+    kmalloc_init(0xC0500000, 0xC0600000);
+    paging_init();
+    process_init();
+    input_init();
+
+    vga_print("magic: ");
+    vga_print_num(mb2_magic);
+    vga_print("\n");
+
+    // parse multiboot2 tags
+    unsigned int addr = mb2_addr + 8; // skip total_size and reserved
+    mb2_tag_framebuffer_t *fb_tag = 0;
+
+    while (1) {
+        mb2_tag_t *tag = (mb2_tag_t *)addr;
+        if (tag->type == 0) break; // end tag
+
+        if (tag->type == 8) { // framebuffer tag
+            fb_tag = (mb2_tag_framebuffer_t *)tag;
+        }
+
+        addr = (addr + tag->size + 7) & ~7; // align to 8 bytes
+    }
+
+    if (fb_tag) {
+        unsigned int fb_phys = (unsigned int)fb_tag->addr;
+        vga_print("fb phys: "); vga_print_num(fb_phys); vga_print("\n");
+        vga_print("w: "); vga_print_num(fb_tag->width); vga_print("\n");
+        vga_print("h: "); vga_print_num(fb_tag->height); vga_print("\n");
+        vga_print("pitch: "); vga_print_num(fb_tag->pitch); vga_print("\n");
+        vga_print("bpp: "); vga_print_num(fb_tag->bpp); vga_print("\n");
+
+        unsigned int fb_size = fb_tag->pitch * fb_tag->height;
+        paging_map_framebuffer(fb_phys, fb_size);
         fb_init(
-            (unsigned char *)(unsigned int)mbi->framebuffer_addr,
-            mbi->framebuffer_width,
-            mbi->framebuffer_height,
-            mbi->framebuffer_pitch,
-            mbi->framebuffer_bpp
+            (unsigned char *)paging_get_fb_virt(),
+            fb_tag->width,
+            fb_tag->height,
+            fb_tag->pitch,
+            fb_tag->bpp
         );
-        fb_clear(0x00FF0000);
+        fb_clear(0x00000000);
+        fb_draw_string(10, 10, "Hello from myOS!", 0x00FFFFFF, 0x00000000);
         vga_print("fb ok\n");
     } else {
-        vga_print("no fb\n");
+        vga_print("no fb tag\n");
     }
 
     __asm__ volatile ("sti");
 
     fs_init(&fs_archive_start, &fs_archive_end - &fs_archive_start);
-    vga_print("fs ok\n");
 
     process_t *shell = process_create_kernel(shell_thread);
     current_process = shell;
