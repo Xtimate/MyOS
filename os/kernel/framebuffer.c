@@ -330,3 +330,32 @@ static void fb_scroll() {
         for (unsigned int x = 0; x < fb_width; x++)
             fb_put_pixel(x, y, TERM_BG);
 }
+
+void fb_terminal_init(void) {
+    term_x = 0;
+    term_y = 0;
+    fb_clear(TERM_BG);
+}
+
+void fb_terminal_putchar(char c) {
+    if (c == '\n') {
+        term_x = 0;
+        term_y++;
+        if (term_y > TERM_ROWS) {
+            fb_scroll();
+            term_y = TERM_ROWS - 1;
+        }
+
+        return;
+    }
+
+    if (c == '\b') {
+        if (term_x > 0) {
+            term_x--;
+            fb_draw_char(term_x * 8, term_y * 16, ' ', TERM_FG, TERM_BG);
+        }
+        return;
+    }
+
+    fb_draw_char(term_x * 8, term_y * 16, c, TERM_FG, TERM_BG);
+}
