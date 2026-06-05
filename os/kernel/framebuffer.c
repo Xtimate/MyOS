@@ -272,6 +272,8 @@ static const unsigned char font[256][16] = {
   {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
 };
 
+void fb_terminal_print(const char *str);
+
 void fb_init(unsigned char *addr, unsigned int width, unsigned int height, unsigned int pitch, unsigned int bpp) {
     fb_addr = addr;
     fb_width = width;
@@ -358,4 +360,35 @@ void fb_terminal_putchar(char c) {
     }
 
     fb_draw_char(term_x * 8, term_y * 16, c, TERM_FG, TERM_BG);
+    term_x++;
+    if (term_y >= TERM_COLS) {
+        term_x = 0;
+        term_y++;
+        if (term_y > TERM_ROWS) {
+            fb_scroll();
+            term_y = TERM_ROWS - 1;
+        }
+    }
+}
+
+void fb_terminal_write(const char *str) {
+    while (*str)
+        fb_terminal_putchar(*str++);
+}
+
+void fb_terminal_print(const char *str) {
+    while (*str)
+        fb_terminal_putchar(*str++);
+}
+
+void fb_terminal_print_num(unsigned int n) {
+    char buf[12];
+    int i = 10;
+    buf[11] = 0;
+    if (n == 0) { fb_terminal_putchar('0'); return; }
+    while (n && i >= 0) {
+        buf[i--] = '0' + (n % 10);
+        n /= 10;
+    }
+    fb_terminal_print(&buf[i + 1]);
 }

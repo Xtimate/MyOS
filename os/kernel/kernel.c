@@ -93,7 +93,7 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
             fb_tag->bpp
         );
         fb_clear(0x00000000);
-        fb_draw_string(10, 10, "Hello from myOS!", 0x00FFFFFF, 0x00000000);
+        fb_terminal_init();
         vga_print("fb ok\n");
     } else {
         vga_print("no fb tag\n");

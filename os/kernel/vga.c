@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "include/framebuffer.h"
 #define VGA_BUFFER 0xC00B8000
 
 static int cursor_x = 0;
@@ -37,70 +38,23 @@ void vga_init() {
 }
 
 void vga_clear() {
-    char *vga = (char *)VGA_BUFFER;
-    for (int i = 0; i < VGA_WIDTH * VGA_HEIGHT * 2; i += 2) {
-        vga[i] = ' ';
-        vga[i + 1] = current_color;
-    }
-    cursor_x = 0;
-    cursor_y = 0;
-    update_cursor();
+    fb_terminal_init();
 }
 
 void vga_set_color(unsigned char fg, unsigned char bg) {
-    current_color = (bg << 4) | (fg & 0x0F);
+    (void)fg; (void)bg;
 }
 
 void vga_putchar(char c) {
-    char *vga = (char *)VGA_BUFFER;
-
-    if (c == '\n') {
-        cursor_x = 0;
-        cursor_y++;
-    } else if (c == '\r') {
-        cursor_x = 0;
-    } else if (c == '\b') {
-        if (cursor_x > 0) {
-            cursor_x--;
-            int pos = (cursor_y * VGA_WIDTH + cursor_x) * 2;
-            vga[pos] = ' ';
-            vga[pos + 1] = current_color;
-        }
-    } else {
-        int pos = (cursor_y * VGA_WIDTH + cursor_x) * 2;
-        vga[pos] = c;
-        vga[pos + 1] = current_color;
-        cursor_x++;
-        if (cursor_x > VGA_WIDTH) {
-            cursor_x = 0;
-            cursor_y++;
-        }
-    }
-
-    scroll();
-    update_cursor();
+    fb_terminal_putchar(c);
 }
 
 void vga_print(const char *str) {
-    for (int i = 0; str[i] != 0; i++) {
-        vga_putchar(str[i]);
-    }
+    fb_terminal_print(str);
 }
 
 void vga_print_num(unsigned int n) {
-    if (n == 0) {
-        vga_putchar('0');
-        return;
-    }
-    char buf[16];
-    int i = 0;
-    while (n > 0) {
-        buf[i++] = '0' + (n % 10);
-        n /= 10;
-    }
-    for (int j = i - 1; j >= 0; j--) {
-        vga_putchar(buf[j]);
-    }
+    fb_terminal_print_num(n);
 }
 
 void vga_print_hex(unsigned int n) {
