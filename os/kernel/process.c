@@ -3,7 +3,6 @@
 #include "include/elf.h"
 #include "include/vga.h"
 #include "include/kstring.h"
-#include "include/shell.h";
 
 #define MAX_ARGS 16
 
@@ -46,12 +45,16 @@ process_t *process_create(void *elf_data, int argc, char **argv) {
     proc->just_started = 1;
 
     proc->type = PROCESS_TYPE_USER;
+    vga_print("alloc dir\n");
     proc->page_dir = paging_create_directory();
+    vga_print("dir done\n");
     unsigned int pd_phys = (unsigned int)proc->page_dir;
 
     unsigned int i;
     unsigned int brk = 0;
+    vga_print("elf load\n");
     unsigned int entry = elf_load(elf_data, pd_phys, &brk);
+    vga_print("elf done\n");
 
     if (entry == 0) {
         vga_print("process_create: ELF load failed\n");

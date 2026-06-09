@@ -58,9 +58,9 @@ unsigned int *paging_create_directory() {
     for (int i = 0; i < 1024; i++)
         dir[i] = 0;
 
-    dir[768] = BOOT_PAGE_TABLE1_PHYS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
-    dir[769] = BOOT_PAGE_TABLE2_PHYS | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
-
+    unsigned int *kernel_dir = page_directory;
+    for (int i = 768; i < 1024; i++)
+        dir[i] = kernel_dir[i];
     unsigned int *upt = (unsigned int *)paging_alloc_frame();
     unsigned int upt_phys = (unsigned int)upt - 0xC0000000;
 

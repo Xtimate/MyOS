@@ -27,6 +27,7 @@ static void sys_exit(struct registers *r) {
         process_exit(current_process);
         current_process = 0;
     }
+    foreground_pid = -1;
     outb(0x20, 0x20);
     __asm__ volatile ("sti");
     while (1) { __asm__ volatile ("hlt"); }

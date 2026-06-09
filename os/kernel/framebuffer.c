@@ -343,7 +343,7 @@ void fb_terminal_putchar(char c) {
     if (c == '\n') {
         term_x = 0;
         term_y++;
-        if (term_y > TERM_ROWS) {
+        if (term_y >= TERM_ROWS) {
             fb_scroll();
             term_y = TERM_ROWS - 1;
         }
@@ -359,12 +359,14 @@ void fb_terminal_putchar(char c) {
         return;
     }
 
+    if (term_x >= TERM_COLS || term_y >=TERM_ROWS) return;
+
     fb_draw_char(term_x * 8, term_y * 16, c, TERM_FG, TERM_BG);
     term_x++;
-    if (term_y >= TERM_COLS) {
+    if (term_x >= TERM_COLS) {
         term_x = 0;
         term_y++;
-        if (term_y > TERM_ROWS) {
+        if (term_y >= TERM_ROWS) {
             fb_scroll();
             term_y = TERM_ROWS - 1;
         }

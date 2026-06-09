@@ -9,12 +9,11 @@
 #include "include/kmalloc.h"
 #include "include/timer.h"
 #include "include/paging.h"
-#include "include/usermode.h"
 #include "include/syscall.h"
-#include "include/elf.h"
 #include "include/fs.h"
 #include "include/input.h"
 #include "include/framebuffer.h"
+#include "include/pci.h"
 
 typedef struct {
     unsigned int type;
@@ -102,6 +101,15 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     __asm__ volatile ("sti");
 
     fs_init(&fs_archive_start, &fs_archive_end - &fs_archive_start);
+
+    pci_device_t nic;
+    if (pci_find_device(0x10EC, 0x8139, &nic)) {
+        vga_print("RTL8139 found, io_base: ");
+        vga_print_hex(nic.io_base);
+        vga_print("\n");
+    } else {
+        vga_print("RTL8139 not found\n");
+    }
 
     process_t *shell = process_create_kernel(shell_thread);
     current_process = shell;
