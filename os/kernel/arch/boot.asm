@@ -95,6 +95,14 @@ higher_half:
 
     mov esp, stack_top
 
+    extern bss_start
+    extern bss_end
+    mov edi, bss_start
+    mov ecx, bss_end
+    sub ecx, edi
+    xor eax, eax
+    rep stosb
+
     push 0
     popf
     push ebp      ; mbi pointer

@@ -54,6 +54,7 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     paging_init();
     process_init();
     input_init();
+    pci_enumerate();
 
     vga_print("magic: ");
     vga_print_num(mb2_magic);
@@ -102,11 +103,12 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
 
     fs_init(&fs_archive_start, &fs_archive_end - &fs_archive_start);
 
-    pci_device_t nic;
-    if (pci_find_device(0x10EC, 0x8139, &nic)) {
-        vga_print("RTL8139 found, io_base: ");
-        vga_print_hex(nic.io_base);
-        vga_print("\n");
+    pci_device_t *nic = pci_find_device(0x02, 0x00); // class=network, subclass=ethernet
+    if (nic) {
+        vga_print("RTL8139 found at ");
+        vga_print_num(nic->bus); vga_print(":");
+        vga_print_num(nic->device); vga_print(".");
+        vga_print_num(nic->function); vga_print("\n");
     } else {
         vga_print("RTL8139 not found\n");
     }

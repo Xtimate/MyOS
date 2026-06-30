@@ -8,6 +8,7 @@
 #include "include/exec.h"
 #include "include/process.h"
 #include "include/fs.h"
+#include "include/pci.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -37,6 +38,7 @@ static void cmd_ps(int argc, char **argv);
 static void cmd_kill(int argc, char **argv);
 static void cmd_cat(int argc, char **argv);
 static void cmd_fg(int argc, char **argv);
+static void cmd_pci(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -52,6 +54,7 @@ static struct command commands[] = {
     { "kill", cmd_kill },
     { "cat", cmd_cat },
     { "fg", cmd_fg },
+    { "pci", cmd_pci },
     { 0, 0 }  // null terminator
 };
 
@@ -250,6 +253,12 @@ static void cmd_fg(int argc, char **argv) {
     }
 
     vga_print("\nfg: no such process\n");
+}
+
+static void cmd_pci(int argc, char **argv) {
+    vga_print("\n");
+    pci_enumerate();
+    pci_print_devices();
 }
 
 static void shell_execute(char *input) {

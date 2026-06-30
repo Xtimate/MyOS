@@ -27,8 +27,10 @@ SECTIONS {
         *(.rodata.*)
     } :kernel
     .bss : AT(ADDR(.bss) - KERNEL_VIRTUAL_BASE) {
+        bss_start = .;
         *(.bss)
         *(.bss.*)
+        bss_end = .;
     } :bss
 
     /DISCARD/ : {
