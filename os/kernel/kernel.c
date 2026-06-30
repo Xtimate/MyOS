@@ -40,6 +40,23 @@ void shell_thread() {
     while (1) { __asm__ volatile ("hlt"); }
 }
 
+static void serial_print(const char *s) {
+    while (*s) {
+        __asm__ volatile ("outb %0, $0x3F8" : : "a"(*s));
+        s++;
+    }
+}
+
+static void serial_hex(unsigned int n) {
+    char buf[9]; buf[8] = 0;
+    for (int i = 7; i >= 0; i--) {
+        int x = n & 0xF;
+        buf[i] = x < 10 ? '0'+x : 'a'+x-10;
+        n >>= 4;
+    }
+    serial_print(buf);
+}
+
 void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     vga_init();
 
@@ -84,7 +101,25 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         vga_print("bpp: "); vga_print_num(fb_tag->bpp); vga_print("\n");
 
         unsigned int fb_size = fb_tag->pitch * fb_tag->height;
+
+        // init serial port 0x3F8
+        __asm__ volatile ("outb %0, $0x3F9" : : "a"((unsigned char)0x00)); // disable interrupts
+        __asm__ volatile ("outb %0, $0x3FB" : : "a"((unsigned char)0x80)); // enable DLAB
+        __asm__ volatile ("outb %0, $0x3F8" : : "a"((unsigned char)0x03)); // baud lo
+        __asm__ volatile ("outb %0, $0x3F9" : : "a"((unsigned char)0x00)); // baud hi
+        __asm__ volatile ("outb %0, $0x3FB" : : "a"((unsigned char)0x03)); // 8N1
+        __asm__ volatile ("outb %0, $0x3FC" : : "a"((unsigned char)0x03)); // RTS/DSR
+
+        serial_print("pd_phys: ");
+        serial_hex((unsigned int)page_directory - 0xC0000000);
+        serial_print("\n");
         paging_map_framebuffer(fb_phys, fb_size);
+        serial_print("pd[1008]: ");
+        serial_hex(paging_get_pd_entry(1008));
+        serial_print("\n");
+
+        paging_map_framebuffer(fb_phys, fb_size);
+
         fb_init(
             (unsigned char *)paging_get_fb_virt(),
             fb_tag->width,
@@ -94,6 +129,9 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         );
         fb_clear(0x00000000);
         fb_terminal_init();
+        vga_print("pd[1008] after fb map: ");
+        vga_print_hex(paging_get_pd_entry(1008));
+        vga_print("\n");
         vga_print("fb ok\n");
     } else {
         vga_print("no fb tag\n");

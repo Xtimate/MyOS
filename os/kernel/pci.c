@@ -11,7 +11,7 @@ static unsigned int inl(unsigned short port) {
     return val;
 }
 
-static void pci_print_hex(unsigned int n) {
+void pci_print_hex(unsigned int n) {
     char buf[9];
     buf[8] = 0;
     for (int i = 7; i >= 0; i--) {
@@ -67,55 +67,26 @@ pci_device_t pci_devices[PCI_MAX_DEVICES];
 int pci_device_count = 0;
 
 static const char *pci_class_name(unsigned char class_code, unsigned char subclass) {
-    switch (class_code) {
-        case 0x00:
-            return (subclass == 0x01) ? "VGA (legacy)" : "Unclassified";
-        case 0x01:
-            switch (subclass) {
-                case 0x00: return "SCSI controller";
-                case 0x01: return "IDE controller";
-                case 0x06: return "SATA controller (AHCI)";
-                case 0x08: return "NVMe controller";
-                default:   return "Mass storage controller";
-            }
-        case 0x02:
-            switch (subclass) {
-                case 0x00: return "Ethernet controller";
-                case 0x80: return "Network controller";
-                default:   return "Network controller";
-            }
-        case 0x03:
-            switch (subclass) {
-                case 0x00: return "VGA controller";
-                case 0x01: return "XGA controller";
-                default:   return "Display controller";
-            }
-        case 0x04: return "Multimedia device";
-        case 0x05: return "Memory controller";
-        case 0x06:
-            switch (subclass) {
-                case 0x00: return "Host bridge";
-                case 0x01: return "ISA bridge";
-                case 0x04: return "PCI-to-PCI bridge";
-                default:   return "Bridge device";
-            }
-        case 0x07: return "Communication controller";
-        case 0x08: return "System peripheral";
-        case 0x09: return "Input device";
-        case 0x0A: return "Docking station";
-        case 0x0B: return "Processor";
-        case 0x0C:
-            switch (subclass) {
-                case 0x03: return "USB controller";
-                case 0x05: return "SMBus controller";
-                default:   return "Serial bus controller";
-            }
-        case 0x0D: return "Wireless controller";
-        case 0x0F: return "Sattelite controller";
-        case 0x10: return "Encryption controller";
-        case 0x11: return "Signal processing controller";
-        default:   return "Unknown device";
-    }
+    (void)subclass;
+    static const char *names[] = {
+        "Unclassified",        // 0x00
+        "Mass storage",        // 0x01
+        "Network controller",  // 0x02
+        "Display controller",  // 0x03
+        "Multimedia device",   // 0x04
+        "Memory controller",   // 0x05
+        "Bridge device",       // 0x06
+        "Communication ctrl",  // 0x07
+        "System peripheral",   // 0x08
+        "Input device",        // 0x09
+        "Docking station",     // 0x0A
+        "Processor",           // 0x0B
+        "Serial bus ctrl",     // 0x0C
+        "Wireless controller", // 0x0D
+    };
+    if (class_code < 0x0E)
+        return names[class_code];
+    return "Unknown device";
 }
 
 static void pci_check_function(unsigned char bus, unsigned char dev, unsigned char func) {

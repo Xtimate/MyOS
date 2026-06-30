@@ -9,6 +9,8 @@
 #include "include/process.h"
 #include "include/fs.h"
 #include "include/pci.h"
+#include "include/framebuffer.h"
+#include "include/paging.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -256,7 +258,10 @@ static void cmd_fg(int argc, char **argv) {
 }
 
 static void cmd_pci(int argc, char **argv) {
-    vga_print("\n");
+    unsigned int entry = paging_get_pd_entry(1008);
+    fb_terminal_print("pd[1008]: ");
+    pci_print_hex(entry);
+    fb_terminal_print("\n");
     pci_enumerate();
     pci_print_devices();
 }

@@ -67,7 +67,7 @@ iso: kernel/kernel.bin
 	grub-mkrescue -o myos.iso iso
 
 run: iso
-	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown
+	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown -vga std -netdev user,id=net0 -device rtl8139,netdev=net0 -serial mon:stdio -d int,cpu_reset -D /tmp/qemu.log
 
 clean:
 	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso $(USER_PROGS) user/syscalls.o fs.tar

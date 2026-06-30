@@ -51,6 +51,8 @@ void pci_enumerate();
 
 void pci_print_devices();
 
+void pci_print_hex(unsigned int n);
+
 pci_device_t *pci_find_device(unsigned char class_code, unsigned char subclass);
 
 extern int pci_device_count;

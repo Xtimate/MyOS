@@ -107,6 +107,9 @@ unsigned int paging_alloc_phys_frame() {
 void paging_map_framebuffer(unsigned int phys, unsigned int size) {
     unsigned int pd_phys = (unsigned int)page_directory - 0xC0000000;
     unsigned int pages = (size + 0xFFF) / 0x1000;
+    paging_map_page(pd_phys, FB_VIRT_BASE, phys); // map just first page
+        // read it back
+        unsigned int *dir = (unsigned int *)(pd_phys + 0xC0000000);
     for (unsigned int i = 0; i < pages; i++) {
         paging_map_page(pd_phys, FB_VIRT_BASE + i *0x1000, phys + i * 0x1000);
     }
@@ -114,4 +117,8 @@ void paging_map_framebuffer(unsigned int phys, unsigned int size) {
 
 unsigned int paging_get_fb_virt() {
     return FB_VIRT_BASE;
+}
+
+unsigned int paging_get_pd_entry(int index) {
+    return page_directory[index];
 }

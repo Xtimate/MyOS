@@ -1,4 +1,4 @@
-#include "vga.h"
+#include "include/vga.h"
 #include "include/framebuffer.h"
 #define VGA_BUFFER 0xC00B8000
 
