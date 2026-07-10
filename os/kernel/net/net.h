@@ -12,6 +12,7 @@ static inline unsigned int htonl(unsigned int x) {
 }
 static inline unsigned int ntohl(unsigned int x) { return htonl(x); }
 
+void net_poll();
 // Ethernet header — every frame starts with this
 typedef struct __attribute__((packed)) {
     unsigned char  dest_mac[6];
