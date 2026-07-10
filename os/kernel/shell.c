@@ -10,7 +10,8 @@
 #include "include/fs.h"
 #include "include/pci.h"
 #include "include/framebuffer.h"
-#include "include/paging.h"
+#include "net/arp.h"
+#include "net/net.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -41,6 +42,7 @@ static void cmd_kill(int argc, char **argv);
 static void cmd_cat(int argc, char **argv);
 static void cmd_fg(int argc, char **argv);
 static void cmd_pci(int argc, char **argv);
+static void cmd_arp(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -57,6 +59,7 @@ static struct command commands[] = {
     { "cat", cmd_cat },
     { "fg", cmd_fg },
     { "pci", cmd_pci },
+    { "arp", cmd_arp },
     { 0, 0 }  // null terminator
 };
 
@@ -226,6 +229,15 @@ static void cmd_cat(int argc, char **argv) {
         vga_print(tmp);
     }
     vga_print("\n");
+}
+
+static void cmd_arp(int argc, char **argv) {
+    unsigned char target_ip[4] = {10, 0, 2, 2};
+    arp_send_request(target_ip);
+
+    for (int i = 0; i < 1000000; i++) {
+        net_poll();
+    }
 }
 
 static void cmd_fg(int argc, char **argv) {

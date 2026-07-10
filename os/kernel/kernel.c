@@ -15,6 +15,8 @@
 #include "include/framebuffer.h"
 #include "include/pci.h"
 #include "drivers/driver.h"
+#include "net/arp.h"
+#include "drivers/rtl8139.h"
 
 typedef struct {
     unsigned int type;
@@ -131,6 +133,12 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         fb_clear(0x00000000);
         fb_terminal_init();
         drivers_init_all();
+
+        unsigned char my_ip[4] = {10, 0, 2, 15};
+        unsigned char mac[6];
+        rtl8139_get_mac(mac);
+        arp_init(mac, my_ip);
+
         vga_print("fb ok\n");
     } else {
         vga_print("no fb tag\n");
