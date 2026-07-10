@@ -14,6 +14,7 @@
 #include "include/input.h"
 #include "include/framebuffer.h"
 #include "include/pci.h"
+#include "drivers/driver.h"
 
 typedef struct {
     unsigned int type;
@@ -129,9 +130,7 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         );
         fb_clear(0x00000000);
         fb_terminal_init();
-        vga_print("pd[1008] after fb map: ");
-        vga_print_hex(paging_get_pd_entry(1008));
-        vga_print("\n");
+        drivers_init_all();
         vga_print("fb ok\n");
     } else {
         vga_print("no fb tag\n");
@@ -140,16 +139,6 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     __asm__ volatile ("sti");
 
     fs_init(&fs_archive_start, &fs_archive_end - &fs_archive_start);
-
-    pci_device_t *nic = pci_find_device(0x02, 0x00); // class=network, subclass=ethernet
-    if (nic) {
-        vga_print("RTL8139 found at ");
-        vga_print_num(nic->bus); vga_print(":");
-        vga_print_num(nic->device); vga_print(".");
-        vga_print_num(nic->function); vga_print("\n");
-    } else {
-        vga_print("RTL8139 not found\n");
-    }
 
     process_t *shell = process_create_kernel(shell_thread);
     current_process = shell;

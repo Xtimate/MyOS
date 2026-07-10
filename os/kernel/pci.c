@@ -19,7 +19,6 @@ void pci_print_hex(unsigned int n) {
         buf[i] = nibble < 10 ? '0' + nibble : 'a' + nibble - 10;
         n >>= 4;
     }
-    // skip leading zeros
     char *p = buf;
     while (*p == '0' && *(p+1)) p++;
     fb_terminal_print(p);
@@ -40,8 +39,7 @@ unsigned int pci_read32(unsigned char bus, unsigned char dev, unsigned char func
 
 unsigned short pci_read16(unsigned char bus, unsigned char dev, unsigned char func, unsigned char offset) {
     unsigned int val = pci_read32(bus, dev, func, offset & ~3);
-
-    return (unsigned char)((val >> ((offset & 3) * 8)) & 0xFF);
+    return (unsigned short)((val >> ((offset & 2) * 8)) & 0xFFFF);
 }
 
 unsigned char pci_read8(unsigned char bus, unsigned char dev,
@@ -126,8 +124,7 @@ static void pci_check_device(unsigned char bus, unsigned char dev) {
 
 void pci_enumerate() {
     pci_device_count = 0;
-
-    for (unsigned int bus = 0; bus < 1; bus++) {
+    for (unsigned int bus = 0; bus < 256; bus++) {
         for (unsigned char dev = 0; dev < 32; dev++) {
             pci_check_device((unsigned char)bus, dev);
         }
@@ -140,7 +137,7 @@ void pci_print_devices() {
         return;
     }
 
-    for (int i; i < pci_device_count; i++) {
+    for (int i = 0; i < pci_device_count; i++) {
         pci_device_t *d = &pci_devices[i];
 
         fb_terminal_print_num(d->bus);
@@ -176,4 +173,14 @@ pci_device_t *pci_find_device(unsigned char class_code, unsigned char subclass) 
             }
     }
     return 0;
+}
+
+unsigned int pci_get_io_base(pci_device_t *dev) {
+    unsigned int bar0 = pci_read32(dev->bus, dev->device, dev->function, PCI_BAR0);
+
+    if (!(bar0 & 0x1)) {
+        return 0;
+    }
+
+    return bar0 & ~0x3;
 }

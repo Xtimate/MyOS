@@ -45,7 +45,7 @@ unsigned short pci_read16(unsigned char bus, unsigned char dev, unsigned char fu
 
 unsigned char pci_read8(unsigned char bus, unsigned char dev, unsigned char func, unsigned char offset);
 
-void pci_write(unsigned char bus, unsigned char dev, unsigned char func, unsigned char offset, unsigned int value);
+void pci_write32(unsigned char bus, unsigned char dev, unsigned char func, unsigned char offset, unsigned int value);
 
 void pci_enumerate();
 
@@ -54,6 +54,8 @@ void pci_print_devices();
 void pci_print_hex(unsigned int n);
 
 pci_device_t *pci_find_device(unsigned char class_code, unsigned char subclass);
+
+unsigned int pci_get_io_base(pci_device_t *dev);
 
 extern int pci_device_count;
 extern pci_device_t pci_devices[PCI_MAX_DEVICES];

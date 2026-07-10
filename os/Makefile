@@ -27,7 +27,7 @@ user/%: user/%.c user/syscalls.o user/crt0.o
 fs.tar: $(USER_PROGS)
 	cd user && tar cf ../fs.tar hello loop inp filetest hello.txt brktest hello2 complex args micropython sleeptest
 
-kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/exec.c kernel/process.c kernel/scheduler.c kernel/arch/fs_bin.asm kernel/arch/switch.asm kernel/input.c kernel/pci.c kernel/framebuffer.c kernel/kernel.c
+kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/exec.c kernel/process.c kernel/scheduler.c kernel/arch/fs_bin.asm kernel/arch/switch.asm kernel/input.c kernel/pci.c kernel/framebuffer.c kernel/drivers/driver.c kernel/drivers/rtl8139.c kernel/kernel.c
 	$(AS) -f elf32 kernel/arch/boot.asm -o kernel/arch/boot.o
 	$(CC) $(CFLAGS) -c kernel/gdt.c -o kernel/gdt.o
 	$(AS) -f elf32 kernel/arch/gdt.asm -o kernel/arch/gdt_flush.o
@@ -57,8 +57,10 @@ kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm 
 	$(CC) $(CFLAGS) -c kernel/input.c -o kernel/input.o
 	$(CC) $(CFLAGS) -c kernel/framebuffer.c -o kernel/framebuffer.o
 	$(CC) $(CFLAGS) -c kernel/pci.c -o kernel/pci.o
+	$(CC) $(CFLAGS) -c kernel/drivers/driver.c -o kernel/drivers/driver.o
+	$(CC) $(CFLAGS) -c kernel/drivers/rtl8139.c -o kernel/drivers/rtl8139.o
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
-	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/exec.o kernel/process.o kernel/scheduler.o kernel/arch/fs_bin.o kernel/arch/switch.o kernel/input.o kernel/pci.o kernel/framebuffer.o -o kernel/kernel.bin
+	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/exec.o kernel/process.o kernel/scheduler.o kernel/arch/fs_bin.o kernel/arch/switch.o kernel/input.o kernel/pci.o kernel/framebuffer.o kernel/drivers/driver.o kernel/drivers/rtl8139.o -o kernel/kernel.bin
 
 iso: kernel/kernel.bin
 	mkdir -p iso/boot/grub
@@ -70,4 +72,4 @@ run: iso
 	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown -vga std -netdev user,id=net0 -device rtl8139,netdev=net0 -serial mon:stdio -d int,cpu_reset -D /tmp/qemu.log
 
 clean:
-	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o myos.iso $(USER_PROGS) user/syscalls.o fs.tar
+	rm -rf iso kernel/*.bin kernel/*.o kernel/arch/*.o kernel/drivers/*.o myos.iso $(USER_PROGS) user/syscalls.o fs.tar
