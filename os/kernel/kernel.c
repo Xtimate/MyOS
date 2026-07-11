@@ -17,6 +17,7 @@
 #include "drivers/driver.h"
 #include "net/arp.h"
 #include "drivers/rtl8139.h"
+#include "net/ipv4.h"
 
 typedef struct {
     unsigned int type;
@@ -40,7 +41,10 @@ extern char fs_archive_end;
 
 void shell_thread() {
     shell_init();
-    while (1) { __asm__ volatile ("hlt"); }
+    while (1) {
+        net_poll();
+        __asm__ volatile ("hlt");
+    }
 }
 
 static void serial_print(const char *s) {
@@ -134,10 +138,11 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         fb_terminal_init();
         drivers_init_all();
 
-        unsigned char my_ip[4] = {10, 0, 2, 15};
+        unsigned char my_ip[4] = {192, 168, 100, 2};
         unsigned char mac[6];
         rtl8139_get_mac(mac);
         arp_init(mac, my_ip);
+        ipv4_init(my_ip);
 
         vga_print("fb ok\n");
     } else {

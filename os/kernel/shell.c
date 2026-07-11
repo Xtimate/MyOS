@@ -12,6 +12,7 @@
 #include "include/framebuffer.h"
 #include "net/arp.h"
 #include "net/net.h"
+#include "net/icmp.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -43,6 +44,7 @@ static void cmd_cat(int argc, char **argv);
 static void cmd_fg(int argc, char **argv);
 static void cmd_pci(int argc, char **argv);
 static void cmd_arp(int argc, char **argv);
+static void cmd_ping(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -60,6 +62,7 @@ static struct command commands[] = {
     { "fg", cmd_fg },
     { "pci", cmd_pci },
     { "arp", cmd_arp },
+    { "ping", cmd_ping },
     { 0, 0 }  // null terminator
 };
 
@@ -232,11 +235,14 @@ static void cmd_cat(int argc, char **argv) {
 }
 
 static void cmd_arp(int argc, char **argv) {
-    unsigned char target_ip[4] = {10, 0, 2, 2};
-    arp_send_request(target_ip);
+    fb_terminal_print("\n");
+    unsigned char target_ip[4] = {192, 168, 100, 1};
+    unsigned char mac[6];
 
-    for (int i = 0; i < 1000000; i++) {
-        net_poll();
+    if (arp_resolve(target_ip, mac)) {
+        fb_terminal_print("resolved\n");
+    } else {
+        fb_terminal_print("ARP resolve timed out\n");
     }
 }
 
@@ -273,6 +279,12 @@ static void cmd_pci(int argc, char **argv) {
     fb_terminal_print("\n");
     pci_enumerate();
     pci_print_devices();
+}
+
+static void cmd_ping(int argc, char **argv) {
+    fb_terminal_print("\n");
+    unsigned char target_ip[4] = {8, 8, 8, 8}; // Default to Google's DNS server
+    icmp_ping(target_ip);
 }
 
 static void shell_execute(char *input) {

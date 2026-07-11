@@ -24,4 +24,7 @@ void arp_send_request(const unsigned char *target_ip);
 
 void arp_handle_packet(const unsigned char *data, unsigned int len);
 
+int arp_lookup(const unsigned char *ip, unsigned char *out_mac);
+int arp_resolve(const unsigned char *ip, unsigned char *out_mac);
+
 #endif
