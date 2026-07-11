@@ -3,6 +3,7 @@
 #include "../drivers/rtl8139.h"
 #include "../include/framebuffer.h"
 #include "icmp.h"
+#include "udp.h"
 
 static unsigned char my_ip[4];
 static unsigned short ip_id_counter = 0;
@@ -97,5 +98,7 @@ void ipv4_handle_packet(const unsigned char *data, unsigned int len) {
 
     if (ip->protocol == IP_PROTO_ICMP) {
         icmp_handle_packet(ip->src_ip, payload, payload_len);
+    } else if (ip->protocol == IP_PROTO_UDP) {
+        udp_handle_packet(ip->src_ip, payload, payload_len);
     }
 }

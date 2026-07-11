@@ -11,8 +11,8 @@
 #include "include/pci.h"
 #include "include/framebuffer.h"
 #include "net/arp.h"
-#include "net/net.h"
 #include "net/icmp.h"
+#include "net/udp.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -45,6 +45,7 @@ static void cmd_fg(int argc, char **argv);
 static void cmd_pci(int argc, char **argv);
 static void cmd_arp(int argc, char **argv);
 static void cmd_ping(int argc, char **argv);
+static void cmd_udptest(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -63,6 +64,7 @@ static struct command commands[] = {
     { "pci", cmd_pci },
     { "arp", cmd_arp },
     { "ping", cmd_ping },
+    { "udptest", cmd_udptest },
     { 0, 0 }  // null terminator
 };
 
@@ -285,6 +287,14 @@ static void cmd_ping(int argc, char **argv) {
     fb_terminal_print("\n");
     unsigned char target_ip[4] = {8, 8, 8, 8}; // Default to Google's DNS server
     icmp_ping(target_ip);
+}
+
+static void cmd_udptest(int argc, char **argv) {
+    fb_terminal_print("\n");
+    unsigned char target[4] = {192, 168, 100, 1};
+    const char *msg = "hello from my os";
+    udp_send(target, 12345, 9999, (const unsigned char *)msg, 17);
+    fb_terminal_print("UDP: sent\n");
 }
 
 static void shell_execute(char *input) {

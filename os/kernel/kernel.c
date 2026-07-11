@@ -18,6 +18,7 @@
 #include "net/arp.h"
 #include "drivers/rtl8139.h"
 #include "net/ipv4.h"
+#include "net/udp.h"
 
 typedef struct {
     unsigned int type;
@@ -143,6 +144,8 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         rtl8139_get_mac(mac);
         arp_init(mac, my_ip);
         ipv4_init(my_ip);
+        udp_init();
+        udp_set_ip(my_ip);
 
         vga_print("fb ok\n");
     } else {
