@@ -82,7 +82,13 @@ void udp_handle_packet(const unsigned char *src_ip, const unsigned char *data, u
 
     udp_header_t *udp = (udp_header_t *)data;
     unsigned short dest_port = ntohs(udp->dest_port);
-    unsigned short src_port = ntohs(udp->src_port);
+    unsigned short src_port  = ntohs(udp->src_port);
+
+    fb_terminal_print("UDP: dest_port=");
+    fb_terminal_print_num(dest_port);
+    fb_terminal_print(" src_port=");
+    fb_terminal_print_num(src_port);
+    fb_terminal_print("\n");
 
     unsigned char *payload = (unsigned char *)data + sizeof(udp_header_t);
     unsigned int payload_len = ntohs(udp->length) - sizeof(udp_header_t);

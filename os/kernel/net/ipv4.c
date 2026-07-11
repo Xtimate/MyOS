@@ -34,18 +34,22 @@ static unsigned short ip_checksum(const void *data, unsigned int len) {
 int ipv4_send(const unsigned char *dest_ip, unsigned char protocol, const unsigned char *payload, unsigned int payload_len) {
     unsigned char dest_mac[6];
 
-    unsigned char gateway_ip[4] = {192, 168, 100, 1}; // Hardcoded gateway IP for now
-    const unsigned char *arp_target = dest_ip;
+    int is_broadcast = (dest_ip[0] == 255 && dest_ip[1] == 255 && dest_ip[2] == 255 && dest_ip[3] == 255);
 
-    int same_subnet = (dest_ip[0] == my_ip[0] && dest_ip[1] == my_ip[1] && dest_ip[2] == my_ip[2]);
-    if (!same_subnet) {
-        arp_target = gateway_ip;
-    }
+    if (is_broadcast) {
+            for (int i = 0; i < 6; i++) dest_mac[i] = 0xFF;
+        } else {
+            unsigned char gateway_ip[4] = {192, 168, 100, 1};
+            const unsigned char *arp_target = dest_ip;
 
-    if (!arp_resolve(arp_target, dest_mac)) {
-        fb_terminal_print("IPv4: ARP resolve failed\n");
-        return 0;
-    }
+            int same_subnet = (dest_ip[0] == my_ip[0] && dest_ip[1] == my_ip[1] && dest_ip[2] == my_ip[2]);
+            if (!same_subnet) arp_target = gateway_ip;
+
+            if (!arp_resolve(arp_target, dest_mac)) {
+                fb_terminal_print("IPv4: ARP resolve failed\n");
+                return 0;
+            }
+        }
 
     unsigned int total_len = sizeof(eth_header_t) + sizeof(ipv4_header_t) + payload_len;
     unsigned char frame[1518];

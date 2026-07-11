@@ -13,6 +13,7 @@
 #include "net/arp.h"
 #include "net/icmp.h"
 #include "net/udp.h"
+#include "net/dhcp.h"
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
@@ -46,6 +47,7 @@ static void cmd_pci(int argc, char **argv);
 static void cmd_arp(int argc, char **argv);
 static void cmd_ping(int argc, char **argv);
 static void cmd_udptest(int argc, char **argv);
+static void cmd_dhcp(int argc, char **argv);
 
 static struct command commands[] = {
     { "hello", cmd_hello },
@@ -65,6 +67,7 @@ static struct command commands[] = {
     { "arp", cmd_arp },
     { "ping", cmd_ping },
     { "udptest", cmd_udptest },
+    { "dhcp", cmd_dhcp },
     { 0, 0 }  // null terminator
 };
 
@@ -295,6 +298,20 @@ static void cmd_udptest(int argc, char **argv) {
     const char *msg = "hello from my os";
     udp_send(target, 12345, 9999, (const unsigned char *)msg, 17);
     fb_terminal_print("UDP: sent\n");
+}
+
+static void cmd_dhcp(int argc, char **argv) {
+    fb_terminal_print("\n");
+    unsigned char new_ip[4];
+    if (dhcp_request_ip(new_ip)) {
+        fb_terminal_print("DHCP: got IP ");
+        fb_terminal_print_num(new_ip[0]); fb_terminal_print(".");
+        fb_terminal_print_num(new_ip[1]); fb_terminal_print(".");
+        fb_terminal_print_num(new_ip[2]); fb_terminal_print(".");
+        fb_terminal_print_num(new_ip[3]); fb_terminal_print("\n");
+    } else {
+        fb_terminal_print("DHCP: failed\n");
+    }
 }
 
 static void shell_execute(char *input) {

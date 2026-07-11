@@ -19,6 +19,7 @@
 #include "drivers/rtl8139.h"
 #include "net/ipv4.h"
 #include "net/udp.h"
+#include "net/dhcp.h"
 
 typedef struct {
     unsigned int type;
@@ -146,6 +147,7 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         ipv4_init(my_ip);
         udp_init();
         udp_set_ip(my_ip);
+        dhcp_init(mac);
 
         vga_print("fb ok\n");
     } else {
