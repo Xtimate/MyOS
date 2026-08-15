@@ -66,7 +66,67 @@ static void serial_hex(unsigned int n) {
     serial_print(buf);
 }
 
+// --- capslock LED blink checkpoints (real-hardware debug aid, no serial/display needed) ---
+// Build with `-DQEMU_BUILD` to make these instant no-ops for fast QEMU iteration;
+// omit the flag (plain `make iso`) for real-hardware test builds where you need the LED signal.
+#ifdef QEMU_BUILD
+
+static void blink_capslock(int times) {
+    (void)times; // no-op under QEMU - use serial_print/serial_hex instead
+}
+
+#else
+
+static inline unsigned char kbd_inb() {
+    unsigned char v;
+    __asm__ volatile ("inb $0x64, %0" : "=a"(v));
+    return v;
+}
+
+static inline void kbd_wait() {
+    while (kbd_inb() & 0x02);
+}
+
+static void delay_long(unsigned int outer) {
+    for (unsigned int o = 0; o < outer; o++) {
+        for (volatile unsigned int i = 0; i < 2000000; i++);
+    }
+}
+
+static void blink_capslock(int times) {
+    // long pause before the group starts, so each checkpoint is clearly separated
+    delay_long(400); // ~ a few seconds
+
+    for (int b = 0; b < times; b++) {
+        kbd_wait();
+        __asm__ volatile ("outb %0, $0x60" : : "a"((unsigned char)0xED)); // "Set LEDs" command
+        kbd_wait();
+        __asm__ volatile ("outb %0, $0x60" : : "a"((unsigned char)0x04)); // Caps Lock bit on
+        delay_long(150); // ON duration - clearly visible
+
+        kbd_wait();
+        __asm__ volatile ("outb %0, $0x60" : : "a"((unsigned char)0xED));
+        kbd_wait();
+        __asm__ volatile ("outb %0, $0x60" : : "a"((unsigned char)0x00)); // all LEDs off
+        delay_long(150); // OFF duration - clearly visible
+    }
+    // pause after the group so the next checkpoint's blinks aren't confused with this one
+    delay_long(200);
+}
+
+#endif
+// --- end blink checkpoints ---
+
 void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
+    // absolute first thing: init serial and print, before ANYTHING else runs
+    __asm__ volatile ("outb %0, $0x3F9" : : "a"((unsigned char)0x00));
+    __asm__ volatile ("outb %0, $0x3FB" : : "a"((unsigned char)0x80));
+    __asm__ volatile ("outb %0, $0x3F8" : : "a"((unsigned char)0x03));
+    __asm__ volatile ("outb %0, $0x3F9" : : "a"((unsigned char)0x00));
+    __asm__ volatile ("outb %0, $0x3FB" : : "a"((unsigned char)0x03));
+    __asm__ volatile ("outb %0, $0x3FC" : : "a"((unsigned char)0x03));
+    serial_print("=== kernel_main entered ===\n");
+
     vga_init();
 
     gdt_install();
@@ -102,8 +162,10 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     }
 
     if (fb_tag) {
-        unsigned int fb_phys = (unsigned int)fb_tag->addr;
-        vga_print("fb phys: "); vga_print_num(fb_phys); vga_print("\n");
+        blink_capslock(1); // checkpoint 1: framebuffer tag found, entering fb setup
+
+        unsigned long long fb_phys = fb_tag->addr;
+        vga_print("fb phys: "); vga_print_num((unsigned int)(fb_phys & 0xFFFFFFFF)); vga_print("\n");
         vga_print("w: "); vga_print_num(fb_tag->width); vga_print("\n");
         vga_print("h: "); vga_print_num(fb_tag->height); vga_print("\n");
         vga_print("pitch: "); vga_print_num(fb_tag->pitch); vga_print("\n");
@@ -119,15 +181,29 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
         __asm__ volatile ("outb %0, $0x3FB" : : "a"((unsigned char)0x03)); // 8N1
         __asm__ volatile ("outb %0, $0x3FC" : : "a"((unsigned char)0x03)); // RTS/DSR
 
-        serial_print("pd_phys: ");
-        serial_hex((unsigned int)page_directory - 0xC0000000);
+        blink_capslock(2); // checkpoint 2: serial port initialized
+
+        serial_print("pdpt_phys: ");
+        serial_hex(paging_get_pdpt_phys());
         serial_print("\n");
+
         paging_map_framebuffer(fb_phys, fb_size);
+
+        blink_capslock(3); // checkpoint 3: paging_map_framebuffer returned
+
         serial_print("pd[1008]: ");
         serial_hex(paging_get_pd_entry(1008));
         serial_print("\n");
 
-        paging_map_framebuffer(fb_phys, fb_size);
+        unsigned int *fb_test = (unsigned int *)paging_get_fb_virt();
+
+        blink_capslock(4); // checkpoint 4: got fb virtual pointer
+
+        for (int i = 0; i < 1000; i++) {
+            fb_test[i] = 0xFFFFFFFF; // white
+        }
+
+        blink_capslock(5); // checkpoint 5: raw pixel write loop completed
 
         fb_init(
             (unsigned char *)paging_get_fb_virt(),
@@ -136,7 +212,17 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
             fb_tag->pitch,
             fb_tag->bpp
         );
+
+        blink_capslock(6); // checkpoint 6: fb_init returned
+
+        serial_print("fb_virt (expected): ");
+        serial_hex(paging_get_fb_virt());
+        serial_print("\n");
+
         fb_clear(0x00000000);
+
+        blink_capslock(7); // checkpoint 7: fb_clear returned
+
         fb_terminal_init();
         drivers_init_all();
 

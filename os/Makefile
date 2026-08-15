@@ -1,7 +1,7 @@
 CC = gcc
 UCC = i686-elf-gcc
 AS = nasm
-CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib -Ikernel/include -mno-sse
+CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib -Ikernel/include -mno-sse $(EXTRA_CFLAGS)
 
 NEWLIB = $(HOME)/opt/cross/i686-elf
 UCFLAGS = -m32 -nostartfiles -static -fno-pic -fno-stack-protector \
@@ -69,10 +69,20 @@ kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm 
 	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/exec.o kernel/process.o kernel/scheduler.o kernel/arch/fs_bin.o kernel/arch/switch.o kernel/input.o kernel/pci.o kernel/framebuffer.o kernel/drivers/driver.o kernel/drivers/rtl8139.o kernel/net/arp.o kernel/net/net.o kernel/net/ipv4.o kernel/net/icmp.o kernel/net/udp.o kernel/net/dhcp.o -o kernel/kernel.bin
 
 iso: kernel/kernel.bin
-	mkdir -p iso/boot/grub
+	mkdir -p iso/boot/limine
+	mkdir -p iso/EFI/BOOT
 	cp kernel/kernel.bin iso/boot/kernel.bin
-	cp boot/grub/grub.cfg iso/boot/grub/grub.cfg
-	grub-mkrescue -o myos.iso iso
+	cp boot/limine/limine.conf iso/boot/limine/limine.conf
+	cp /usr/share/limine/limine-bios.sys iso/boot/limine/
+	cp /usr/share/limine/limine-bios-cd.bin iso/boot/limine/
+	cp /usr/share/limine/limine-uefi-cd.bin iso/boot/limine/
+	cp /usr/share/limine/BOOTX64.EFI iso/EFI/BOOT/
+	xorriso -as mkisofs -R -J -b boot/limine/limine-bios-cd.bin \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		--efi-boot boot/limine/limine-uefi-cd.bin \
+		-efi-boot-part --efi-boot-image --protective-msdos-label \
+		iso -o myos.iso
+	limine bios-install myos.iso
 
 run: iso
 	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown -vga std -netdev tap,id=net0,ifname=tap0,script=no,downscript=no -device rtl8139,netdev=net0 -serial mon:stdio -d int,cpu_reset -D /tmp/qemu.log
