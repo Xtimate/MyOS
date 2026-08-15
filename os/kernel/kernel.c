@@ -1,5 +1,7 @@
+#include "include/cursor.h"
 #include "include/gdt.h"
 #include "include/idt.h"
+#include "include/mouse.h"
 #include "include/process.h"
 #include "include/isr.h"
 #include "include/irq.h"
@@ -45,6 +47,7 @@ void shell_thread() {
     shell_init();
     while (1) {
         net_poll();
+        cursor_update();
         __asm__ volatile ("hlt");
     }
 }
@@ -135,6 +138,8 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     syscall_install();
     irq_install();
     keyboard_install();
+    mouse_install();
+    cursor_init();
     timer_install(100);
     kmalloc_init(0xC0500000, 0xC0600000);
     paging_init();

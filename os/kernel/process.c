@@ -3,12 +3,15 @@
 #include "include/elf.h"
 #include "include/vga.h"
 #include "include/kstring.h"
+
 #define MAX_ARGS 16
+#define USER_STACK_SIZE 0x001000
+#define USER_STACK_VIRT 0x00300000
+
 process_t processes[MAX_PROCESSES];
 process_t *current_process = 0;
 int foreground_pid = -1;
-#define USER_STACK_SIZE 0x001000
-#define USER_STACK_VIRT 0x00300000
+
 static unsigned int alloc_user_stack(unsigned int pd_phys) {
     unsigned int phys = paging_alloc_phys_frame();
     paging_map_page(pd_phys, USER_STACK_VIRT, phys);

@@ -1,5 +1,4 @@
-#include "gdt.h"
-#include "vga.h"
+#include "include/gdt.h"
 
 struct gdt_entry gdt[6];
 struct gdt_ptr gp;

@@ -1,5 +1,5 @@
-#include "irq.h"
-#include "idt.h"
+#include "include/irq.h"
+#include "include/idt.h"
 
 // PIC ports
 #define PIC1_COMMAND 0x20

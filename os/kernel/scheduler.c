@@ -1,6 +1,5 @@
 #include "include/process.h"
 #include "include/paging.h"
-#include "include/vga.h"
 #include "include/gdt.h"
 
 extern void switch_context(unsigned int *old_esp, unsigned int new_esp, unsigned int pd_phys);

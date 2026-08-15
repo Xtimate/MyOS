@@ -1,5 +1,5 @@
-#include "kmalloc.h"
-#include "vga.h"
+#include "include/kmalloc.h"
+#include "include/vga.h"
 
 struct block_header {
     unsigned int size;

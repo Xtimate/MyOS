@@ -27,7 +27,7 @@ user/%: user/%.c user/syscalls.o user/crt0.o
 fs.tar: $(USER_PROGS)
 	cd user && tar cf ../fs.tar hello loop inp filetest hello.txt brktest hello2 complex args micropython sleeptest
 
-kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/exec.c kernel/process.c kernel/scheduler.c kernel/arch/fs_bin.asm kernel/arch/switch.asm kernel/input.c kernel/pci.c kernel/framebuffer.c kernel/drivers/driver.c kernel/drivers/rtl8139.c kernel/net/arp.c kernel/net/net.c kernel/net/ipv4.c kernel/net/icmp.c kernel/net/udp.c kernel/net/dhcp.c kernel/kernel.c
+kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm kernel/idt.c kernel/arch/idt.asm kernel/isr.c kernel/arch/isr.asm kernel/irq.c kernel/arch/irq.asm kernel/keyboard.c kernel/mouse.c kernel/cursor.c kernel/vga.c kernel/shell.c kernel/kmalloc.c kernel/timer.c kernel/kstring.c kernel/paging.c kernel/arch/usermode.asm kernel/syscall.c kernel/arch/syscall.asm kernel/elf.c kernel/fs.c kernel/exec.c kernel/process.c kernel/scheduler.c kernel/arch/fs_bin.asm kernel/arch/switch.asm kernel/input.c kernel/pci.c kernel/framebuffer.c kernel/drivers/driver.c kernel/drivers/rtl8139.c kernel/net/arp.c kernel/net/net.c kernel/net/ipv4.c kernel/net/icmp.c kernel/net/udp.c kernel/net/dhcp.c kernel/kernel.c
 	$(AS) -f elf32 kernel/arch/boot.asm -o kernel/arch/boot.o
 	$(CC) $(CFLAGS) -c kernel/gdt.c -o kernel/gdt.o
 	$(AS) -f elf32 kernel/arch/gdt.asm -o kernel/arch/gdt_flush.o
@@ -42,6 +42,8 @@ kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm 
 	$(CC) $(CFLAGS) -c kernel/syscall.c -o kernel/syscall.o
 	$(AS) -f elf32 kernel/arch/syscall.asm -o kernel/arch/syscall.o
 	$(CC) $(CFLAGS) -c kernel/keyboard.c -o kernel/keyboard.o
+	$(CC) $(CFLAGS) -c kernel/mouse.c -o kernel/mouse.o
+	$(CC) $(CFLAGS) -c kernel/cursor.c -o kernel/cursor.o
 	$(CC) $(CFLAGS) -c kernel/vga.c -o kernel/vga.o
 	$(CC) $(CFLAGS) -c kernel/shell.c -o kernel/shell.o
 	$(CC) $(CFLAGS) -c kernel/timer.c -o kernel/timer.o
@@ -66,7 +68,7 @@ kernel/kernel.bin: fs.tar kernel/arch/boot.asm kernel/gdt.c kernel/arch/gdt.asm 
 	$(CC) $(CFLAGS) -c kernel/net/udp.c -o kernel/net/udp.o
 	$(CC) $(CFLAGS) -c kernel/net/dhcp.c -o kernel/net/dhcp.o
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel/kernel.o
-	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/exec.o kernel/process.o kernel/scheduler.o kernel/arch/fs_bin.o kernel/arch/switch.o kernel/input.o kernel/pci.o kernel/framebuffer.o kernel/drivers/driver.o kernel/drivers/rtl8139.o kernel/net/arp.o kernel/net/net.o kernel/net/ipv4.o kernel/net/icmp.o kernel/net/udp.o kernel/net/dhcp.o -o kernel/kernel.bin
+	ld -m elf_i386 -T kernel/linker.ld kernel/arch/boot.o kernel/arch/gdt_flush.o kernel/gdt.o kernel/arch/idt_load.o kernel/idt.o kernel/arch/isr.o kernel/isr.o kernel/arch/irq.o kernel/irq.o kernel/keyboard.o kernel/cursor.o kernel/mouse.o kernel/vga.o kernel/shell.o kernel/kernel.o kernel/kmalloc.o kernel/timer.o kernel/kstring.o kernel/paging.o kernel/arch/usermode.o kernel/syscall.o kernel/arch/syscall.o kernel/elf.o kernel/fs.o kernel/exec.o kernel/process.o kernel/scheduler.o kernel/arch/fs_bin.o kernel/arch/switch.o kernel/input.o kernel/pci.o kernel/framebuffer.o kernel/drivers/driver.o kernel/drivers/rtl8139.o kernel/net/arp.o kernel/net/net.o kernel/net/ipv4.o kernel/net/icmp.o kernel/net/udp.o kernel/net/dhcp.o -o kernel/kernel.bin
 
 iso: kernel/kernel.bin
 	mkdir -p iso/boot/limine

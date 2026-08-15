@@ -394,3 +394,9 @@ void fb_terminal_print_num(unsigned int n) {
     }
     fb_terminal_print(&buf[i + 1]);
 }
+
+unsigned int fb_get_pixel(unsigned int x, unsigned int y) {
+    if (x >= fb_width || y >= fb_height) return 0;
+    unsigned int *pixel = (unsigned int *)(fb_addr + y * fb_pitch + x * (fb_bpp / 8));
+    return *pixel;
+}

@@ -1,6 +1,5 @@
 #include "include/timer.h"
 #include "include/irq.h"
-#include "include/vga.h"
 #include "include/process.h"
 
 int kb_count = 0;

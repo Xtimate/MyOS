@@ -1,6 +1,6 @@
-#include "isr.h"
-#include "idt.h"
-#include "vga.h"
+#include "include/isr.h"
+#include "include/idt.h"
+#include "include/vga.h"
 
 extern void isr0();
 extern void isr1();
