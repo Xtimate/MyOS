@@ -101,6 +101,7 @@ void mouse_install() {
     mouse_read();
 
     irq_install_handler(12, mouse_handler);
+    irq_clear_mask(12);
 }
 
 int mouse_get_x() { return mouse_x; }

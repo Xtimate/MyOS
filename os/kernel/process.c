@@ -40,7 +40,7 @@ process_t *process_create(void *elf_data, int argc, char **argv) {
     proc->just_started = 1;
     proc->type = PROCESS_TYPE_USER;
     vga_print("alloc dir\n");
-    proc->page_dir = (unsigned int *)paging_create_directory();
+    proc->page_dir = (unsigned int *)((unsigned int)page_directory - 0xC0000000);
     vga_print("dir done\n");
     unsigned int pd_phys = (unsigned int)proc->page_dir;
     unsigned int i;

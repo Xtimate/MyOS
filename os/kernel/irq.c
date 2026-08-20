@@ -68,6 +68,10 @@ void irq_install() {
     idt_set_gate(45, (unsigned int)irq13, 0x08, 0x8E);
     idt_set_gate(46, (unsigned int)irq14, 0x08, 0x8E);
     idt_set_gate(47, (unsigned int)irq15, 0x08, 0x8E);
+
+    irq_clear_mask(0);
+    irq_clear_mask(1);
+    irq_clear_mask(2);
 }
 
 void irq_handler(struct registers *r) {
@@ -81,4 +85,21 @@ void irq_handler(struct registers *r) {
         outb(PIC2_COMMAND, 0x20);
     }
     outb(PIC1_COMMAND, 0x20);
+}
+
+void irq_clear_mask(unsigned char irq) {
+    unsigned short port;
+    unsigned char value;
+
+    if (irq < 8) {
+        port = PIC1_DATA;
+    } else {
+        port = PIC2_DATA;
+        irq -= 8;
+    }
+
+    unsigned char mask;
+    __asm__ volatile ("inb %1, %0" : "=a"(mask) : "Nd"(port));
+    value = mask & ~(1 << irq);
+    outb(port, value);
 }

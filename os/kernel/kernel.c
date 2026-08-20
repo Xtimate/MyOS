@@ -169,7 +169,7 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     if (fb_tag) {
         blink_capslock(1); // checkpoint 1: framebuffer tag found, entering fb setup
 
-        unsigned long long fb_phys = fb_tag->addr;
+        unsigned int fb_phys = (unsigned int)fb_tag->addr;
         vga_print("fb phys: "); vga_print_num((unsigned int)(fb_phys & 0xFFFFFFFF)); vga_print("\n");
         vga_print("w: "); vga_print_num(fb_tag->width); vga_print("\n");
         vga_print("h: "); vga_print_num(fb_tag->height); vga_print("\n");
@@ -188,9 +188,9 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
 
         blink_capslock(2); // checkpoint 2: serial port initialized
 
-        serial_print("pdpt_phys: ");
-        serial_hex(paging_get_pdpt_phys());
-        serial_print("\n");
+        serial_print("pd_phys: ");
+        serial_hex((unsigned int)page_directory - 0xC0000000);
+        serial_print("\n");        serial_print("\n");
 
         paging_map_framebuffer(fb_phys, fb_size);
 
