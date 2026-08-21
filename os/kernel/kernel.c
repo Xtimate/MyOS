@@ -47,7 +47,7 @@ void shell_thread() {
     shell_init();
     while (1) {
         net_poll();
-        cursor_update();
+        //cursor_update();
         __asm__ volatile ("hlt");
     }
 }
@@ -138,8 +138,8 @@ void kernel_main(unsigned int mb2_magic, unsigned int mb2_addr) {
     syscall_install();
     irq_install();
     keyboard_install();
-    mouse_install();
-    cursor_init();
+    //mouse_install();
+    //cursor_init();
     timer_install(100);
     kmalloc_init(0xC0500000, 0xC0600000);
     paging_init();

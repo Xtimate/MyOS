@@ -68,3 +68,7 @@ void cursor_update() {
     cursor_erase();
     cursor_draw(x, y);
 }
+
+void cursor_notify_dirty() {
+    drawn = 0;
+}

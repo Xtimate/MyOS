@@ -1,4 +1,5 @@
 #include "include/framebuffer.h"
+#include "include/cursor.h"
 
 #define TERM_COLS (fb_width / 8)
 #define TERM_ROWS (fb_height / 16)
@@ -320,6 +321,8 @@ void fb_draw_string(unsigned int x, unsigned int y, const char *str, unsigned in
 }
 
 static void fb_scroll() {
+    cursor_notify_dirty();
+
     unsigned int row_bytes = fb_pitch * 16;
     unsigned char *dst = fb_addr;
     unsigned char *src = fb_addr + row_bytes;
@@ -340,6 +343,8 @@ void fb_terminal_init(void) {
 }
 
 void fb_terminal_putchar(char c) {
+    cursor_notify_dirty();
+
     if (c == '\n') {
         term_x = 0;
         term_y++;

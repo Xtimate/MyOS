@@ -65,8 +65,8 @@ static void mouse_handler(struct registers *r) {
         if (status & 0x10) dx |= 0xFFFFFF00;
         if (status & 0x20) dy |= 0xFFFFFF00;
 
-        mouse_x += dx;
-        mouse_y -= dy;
+        mouse_x += dy;
+        mouse_y -= dx;
 
         if (mouse_x < 0) mouse_x = 0;
         if (mouse_y < 0) mouse_y = 0;
