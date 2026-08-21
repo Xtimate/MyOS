@@ -40,7 +40,7 @@ process_t *process_create(void *elf_data, int argc, char **argv) {
     proc->just_started = 1;
     proc->type = PROCESS_TYPE_USER;
     vga_print("alloc dir\n");
-    proc->page_dir = (unsigned int *)((unsigned int)page_directory - 0xC0000000);
+    proc->page_dir = (unsigned int *)paging_create_directory();
     vga_print("dir done\n");
     unsigned int pd_phys = (unsigned int)proc->page_dir;
     unsigned int i;
@@ -124,8 +124,7 @@ process_t *process_create_kernel(void (*func)()) {
         return 0;
     }
     proc->type = PROCESS_TYPE_KERNEL;
-    proc->page_dir = (unsigned int *)paging_get_pdpt_phys();
-    unsigned int *stack = (unsigned int *)(proc->kernel_stack + KERNEL_STACK_SIZE);
+    proc->page_dir = (unsigned int *)((unsigned int)page_directory - 0xC0000000);    unsigned int *stack = (unsigned int *)(proc->kernel_stack + KERNEL_STACK_SIZE);
     *--stack = (unsigned int)func;
     proc->esp = (unsigned int)stack;
     proc->state = PROCESS_STATE_READY;
