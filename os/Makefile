@@ -86,7 +86,18 @@ iso: kernel/kernel.bin
 		iso -o myos.iso
 	limine bios-install myos.iso
 
-run: iso
+netsetup:
+	sudo ip addr add 192.168.100.1/24 dev tap0 2>/dev/null || true
+	sudo ip link set tap0 up
+	sudo sysctl -w net.ipv4.ip_forward=1
+	sudo iptables -t nat -C POSTROUTING -s 192.168.100.0/24 -o $$(ip route show default | awk '{print $$5}') -j MASQUERADE 2>/dev/null || \
+	sudo iptables -t nat -A POSTROUTING -s 192.168.100.0/24 -o $$(ip route show default | awk '{print $$5}') -j MASQUERADE
+	sudo iptables -C FORWARD -i tap0 -o $$(ip route show default | awk '{print $$5}') -j ACCEPT 2>/dev/null || \
+	sudo iptables -A FORWARD -i tap0 -o $$(ip route show default | awk '{print $$5}') -j ACCEPT
+	sudo iptables -C FORWARD -i $$(ip route show default | awk '{print $$5}') -o tap0 -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || \
+	sudo iptables -A FORWARD -i $$(ip route show default | awk '{print $$5}') -o tap0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+run: iso netsetup
 	qemu-system-x86_64 -cdrom myos.iso -display gtk -no-reboot -no-shutdown -vga std -netdev tap,id=net0,ifname=tap0,script=no,downscript=no -device rtl8139,netdev=net0 -serial mon:stdio -d int,cpu_reset -D /tmp/qemu.log
 
 clean:
