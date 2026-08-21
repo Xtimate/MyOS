@@ -18,6 +18,7 @@
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
 #define HISTORY_SIZE 16
+#define MAX_FILES 64
 #define PROMPT_LEN 2
 
 static char buffer[BUFFER_SIZE];
@@ -340,7 +341,7 @@ static void shell_execute(char *input) {
     vga_print("\n");
 }
 
-static void shell_prompt() {
+void shell_prompt() {
     vga_print("\n> ");
 }
 
@@ -429,6 +430,39 @@ void shell_process_char(char c) {
             cursor_pos--;
             redraw_tail(cursor_pos, buf_pos + 1);
         }
+        return;
+    }
+
+    if (c == '\t') {
+        int word_start = cursor_pos;
+        while (word_start > 0 && buffer[word_start - 1] != ' ') word_start--;
+
+        int word_len = cursor_pos - word_start;
+        if (word_len == 0) return;
+
+        char names[MAX_FILES][100];
+        int count = fs_list(names, MAX_FILES);
+
+        char *match = 0;
+        int match_count = 0;
+        for (int i = 0; i < count; i++) {
+            if (kstrncmp(names[i], &buffer[word_start], word_len) == 0) {
+                match = names[i];
+                match_count++;
+            }
+        }
+
+        if (match_count == 1) {
+            int old_len = buf_pos;
+            int match_len = kstrlen(match);
+            for (int i = 0; i < match_len; i++) {
+                buffer[word_start + i] = match[i];
+            }
+            buf_pos = word_start + match_len;
+            cursor_pos = buf_pos;
+            redraw_tail(word_start, old_len);
+        }
+
         return;
     }
 

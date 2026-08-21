@@ -92,6 +92,7 @@ static void keyboard_handler(struct registers *r) {
     char c = 0;
     if (scancode == 0x1C) c = '\n';
     else if (scancode == 0x0E) c = '\b';
+    else if (scancode == 0x0F) c = '\t';
     else if (scancode < sizeof(scancode_map)) {
         c = shift_held ? scancode_map_shift[scancode] : scancode_map[scancode];
     }

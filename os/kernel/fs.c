@@ -1,6 +1,5 @@
 #include "include/fs.h"
 #include "include/kstring.h"
-#include "include/vga.h"
 
 typedef struct {
     char name[100];
@@ -62,4 +61,24 @@ fs_file_t fs_open(const char *name) {
     }
 
     return result;
+}
+
+int fs_list(char (*names)[100], int max_names) {
+    int count = 0;
+    unsigned char *ptr = (unsigned char *)fs_archive;
+    unsigned char *end = ptr + fs_size;
+
+    while (ptr + 512 <= end && count < max_names) {
+        ustar_header_t *hdr = (ustar_header_t *)ptr;
+        if (hdr->name[0] == '\0') break;
+
+        kstrcpy(names[count], hdr->name);
+        count++;
+
+        unsigned int size = parse_octal(hdr->size, 12);
+        unsigned int blocks = (size + 511) / 512;
+        ptr += 512 + blocks * 512;
+    }
+
+    return count;
 }

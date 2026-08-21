@@ -25,6 +25,14 @@ int kstrcmp(const char *a, const char *b) {
     return a[i] - b[i];
 }
 
+int kstrncmp(const char *a, const char *b, int n) {
+    for (int i = 0; i < n; i++) {
+        if (a[i] != b[i]) return a[i] - b[i];
+        if (a[i] == 0) return 0;
+    }
+    return 0;
+}
+
 char *kstrcat(char *dest, const char *src) {
     int i = kstrlen(dest);
     int j = 0;

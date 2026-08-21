@@ -1,6 +1,7 @@
 #include "include/process.h"
 #include "include/paging.h"
 #include "include/elf.h"
+#include "include/shell.h"
 #include "include/vga.h"
 #include "include/kstring.h"
 
@@ -135,4 +136,5 @@ void process_exit(process_t *proc) {
     proc->state = PROCESS_STATE_FREE;
     proc->esp = 0;
     proc->pid = 0;
+    shell_prompt();
 }

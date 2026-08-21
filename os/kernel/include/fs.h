@@ -8,5 +8,6 @@ typedef struct {
 
 int fs_init(void *archive, unsigned int size);
 fs_file_t fs_open(const char *name);
+int fs_list(char names[][100], int max_names);
 
 #endif

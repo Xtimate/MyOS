@@ -4,5 +4,6 @@
 void shell_init();
 void shell_process_char(char c);
 void shell_run();
+void shell_prompt();
 
 #endif
