@@ -87,7 +87,12 @@ static void keyboard_handler(struct registers *r) {
                 break;
             }
         }
-        input_putchar(c);
+        if (c == '\n') {
+            input_putchar('\r');
+            input_putchar('\n');
+        } else {
+            input_putchar(c);
+        }
         return;
     }
 

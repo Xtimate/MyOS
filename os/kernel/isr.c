@@ -35,6 +35,23 @@ extern void isr29();
 extern void isr30();
 extern void isr31();
 
+static void dbg_serial_print(const char *s) {
+    while (*s) {
+        __asm__ volatile ("outb %0, $0x3F8" : : "a"(*s));
+        s++;
+    }
+}
+
+static void dbg_serial_hex(unsigned int n) {
+    char buf[9]; buf[8] = 0;
+    for (int i = 7; i >= 0; i--) {
+        int x = n & 0xF;
+        buf[i] = x < 10 ? '0'+x : 'a'+x-10;
+        n >>= 4;
+    }
+    dbg_serial_print(buf);
+}
+
 static const char *exception_messages[] = {
     "Division By Zero",
     "Debug",
@@ -106,6 +123,14 @@ void isr_install(void) {
 }
 
 void fault_handler(struct registers *r) {
+    dbg_serial_print("FAULT int_no=");
+    dbg_serial_hex(r->int_no);
+    dbg_serial_print(" err_code=");
+    dbg_serial_hex(r->err_code);
+    dbg_serial_print(" eip=");
+    dbg_serial_hex(r->eip);
+    dbg_serial_print("\n");
+
     char *vga = (char *)0xC00B8000;
     const char *msg = exception_messages[r->int_no];
     int i = 0;

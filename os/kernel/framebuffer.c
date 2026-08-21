@@ -13,6 +13,7 @@ static unsigned int fb_width;
 static unsigned int fb_height;
 static unsigned int fb_pitch;
 static unsigned int fb_bpp;
+static int esc_state = 0;
 
 static const unsigned char font[256][16] = {
   {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00},
@@ -274,7 +275,22 @@ static const unsigned char font[256][16] = {
 };
 
 void fb_terminal_print(const char *str);
+static void dbg_serial_print(const char *s) {
+    while (*s) {
+        __asm__ volatile ("outb %0, $0x3F8" : : "a"(*s));
+        s++;
+    }
+}
 
+static void dbg_serial_hex(unsigned int n) {
+    char buf[9]; buf[8] = 0;
+    for (int i = 7; i >= 0; i--) {
+        int x = n & 0xF;
+        buf[i] = x < 10 ? '0'+x : 'a'+x-10;
+        n >>= 4;
+    }
+    dbg_serial_print(buf);
+}
 void fb_init(unsigned char *addr, unsigned int width, unsigned int height, unsigned int pitch, unsigned int bpp) {
     fb_addr = addr;
     fb_width = width;
@@ -343,7 +359,43 @@ void fb_terminal_init(void) {
 }
 
 void fb_terminal_putchar(char c) {
-    cursor_notify_dirty();
+    if (esc_state == 0 && c == 27) { // ESC
+        esc_state = 1;
+        return;
+    }
+     if (esc_state == 1) {
+          if (c == '[') {
+            esc_state = 2;
+         } else {
+               esc_state = 0; // not a CSI sequence, just drop it
+         }
+           return;
+       }
+       if (esc_state == 2) {
+        if (c >= '0' && c <= '9') {
+            return; // parameter digit, keep collecting
+        }
+        if (c == ';') {
+            return; // parameter separator, keep collecting
+        }
+        // final byte of the sequence
+        esc_state = 0;
+        if (c == 'K') {
+            dbg_serial_print("erase-line: term_x=");
+            dbg_serial_hex(term_x);
+            dbg_serial_print(" term_y=");
+            dbg_serial_hex(term_y);
+            dbg_serial_print(" TERM_COLS=");
+            dbg_serial_hex(TERM_COLS);
+            dbg_serial_print("\n");
+            // erase from cursor to end of current line
+            for (int x = term_x; x < TERM_COLS; x++) {
+                fb_draw_char(x * 8, term_y * 16, ' ', TERM_FG, TERM_BG);
+            }
+        }
+        // any other final letter (cursor movement etc.) is silently swallowed for now
+        return;
+    }
 
     if (c == '\n') {
         term_x = 0;

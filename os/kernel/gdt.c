@@ -4,7 +4,7 @@ struct gdt_entry gdt[6];
 struct gdt_ptr gp;
 struct tss_entry tss;
 
-static unsigned char kernel_stack[8192];
+static unsigned char kernel_stack[16384];
 
 void gdt_set_entry(int num, unsigned long base, unsigned long limit, unsigned char access, unsigned char gran) {
     gdt[num].base_low    = (base & 0xFFFF);
