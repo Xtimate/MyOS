@@ -457,3 +457,7 @@ unsigned int fb_get_pixel(unsigned int x, unsigned int y) {
     unsigned int *pixel = (unsigned int *)(fb_addr + y * fb_pitch + x * (fb_bpp / 8));
     return *pixel;
 }
+
+void fb_terminal_set_cursor_x(unsigned int x) {
+    if (x < TERM_COLS) term_x = x;
+}

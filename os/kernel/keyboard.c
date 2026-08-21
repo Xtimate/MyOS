@@ -11,6 +11,7 @@
 
 static int ctrl_held = 0;
 static int shift_held = 0;
+static int extended = 0;
 
 static const char scancode_map[] = {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0,
@@ -36,6 +37,30 @@ static unsigned char inb(unsigned short port) {
 
 static void keyboard_handler(struct registers *r) {
     unsigned char scancode = inb(KEYBOARD_DATA_PORT);
+
+    if (scancode == 0xE0) {
+        extended = 1;
+        return;
+    }
+
+    if (extended) {
+        extended = 0;
+        if (scancode & 0x80) return;
+        char special = 0;
+        switch (scancode) {
+            case 0x48: special = 0x11; break;
+            case 0x50: special = 0x12; break;
+            case 0x4B: special = 0x13; break;
+            case 0x4D: special = 0x14; break;
+            default: return;
+        }
+        if (foreground_pid != -1) {
+            input_putchar(special);
+            return;
+        }
+        shell_process_char(special);
+        return;
+    }
 
     if (scancode == 0x1D) { ctrl_held = 1; return; }
     if (scancode == 0x9D) { ctrl_held = 0; return; }

@@ -12,5 +12,6 @@ void fb_terminal_putchar(char c);
 void fb_terminal_print(const char *str);
 void fb_terminal_print_num(unsigned int n);
 unsigned int fb_get_pixel(unsigned int x, unsigned int y);
+void fb_terminal_set_cursor_x(unsigned int x);
 
 #endif

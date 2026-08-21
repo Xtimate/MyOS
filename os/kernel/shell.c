@@ -17,9 +17,15 @@
 
 #define BUFFER_SIZE 256
 #define MAX_ARGS 16
+#define HISTORY_SIZE 16
+#define PROMPT_LEN 2
 
 static char buffer[BUFFER_SIZE];
 static int buf_pos = 0;
+static char history[HISTORY_SIZE][BUFFER_SIZE];
+static int history_count = 0;
+static int history_pos = -1;
+static int cursor_pos = 0;
 
 // command handler type
 typedef void (*command_func)(int argc, char **argv);
@@ -343,22 +349,98 @@ void shell_init() {
     shell_prompt();
 }
 
+static void redraw_tail(int from, int old_len) {
+    fb_terminal_set_cursor_x(PROMPT_LEN + from);
+    for (int i = from; i < buf_pos; i++) {
+        vga_putchar(buffer[i]);
+    }
+    // clear any leftover characters from a longer previous line
+    for (int i = buf_pos; i < old_len; i++) {
+        vga_putchar(' ');
+    }
+    fb_terminal_set_cursor_x(PROMPT_LEN + cursor_pos);
+}
+
 void shell_process_char(char c) {
+    if (c == 0x11) { // Up
+        if (history_count == 0) return;
+        if (history_pos < history_count - 1) history_pos++;
+        int old_len = buf_pos;
+        kstrcpy(buffer, history[history_count - 1 - history_pos]);
+        buf_pos = kstrlen(buffer);
+        cursor_pos = buf_pos;
+        redraw_tail(0, old_len);
+        return;
+    }
+    if (c == 0x12) { // Down
+        int old_len = buf_pos;
+        if (history_pos <= 0) {
+            history_pos = -1;
+            buf_pos = 0;
+            buffer[0] = 0;
+        } else {
+            history_pos--;
+            kstrcpy(buffer, history[history_count - 1 - history_pos]);
+            buf_pos = kstrlen(buffer);
+        }
+        cursor_pos = buf_pos;
+        redraw_tail(0, old_len);
+        return;
+    }
+    if (c == 0x13) { // Left
+        if (cursor_pos > 0) {
+            cursor_pos--;
+            fb_terminal_set_cursor_x(PROMPT_LEN + cursor_pos);
+        }
+        return;
+    }
+    if (c == 0x14) { // Right
+        if (cursor_pos < buf_pos) {
+            cursor_pos++;
+            fb_terminal_set_cursor_x(PROMPT_LEN + cursor_pos);
+        }
+        return;
+    }
+
     if (c == '\n') {
         buffer[buf_pos] = 0;
+        if (buf_pos > 0) {
+            if (history_count < HISTORY_SIZE) {
+                kstrcpy(history[history_count++], buffer);
+            } else {
+                for (int i = 1; i < HISTORY_SIZE; i++) kstrcpy(history[i-1], history[i]);
+                kstrcpy(history[HISTORY_SIZE - 1], buffer);
+            }
+        }
+        history_pos = -1;
         shell_execute(buffer);
         buf_pos = 0;
+        cursor_pos = 0;
         shell_prompt();
-    } else if (c == '\b') {
-        if (buf_pos > 0) {
+        return;
+    }
+
+    if (c == '\b') {
+        if (cursor_pos > 0) {
+            for (int i = cursor_pos - 1; i < buf_pos - 1; i++) {
+                buffer[i] = buffer[i + 1];
+            }
             buf_pos--;
-            vga_putchar('\b');
+            cursor_pos--;
+            redraw_tail(cursor_pos, buf_pos + 1);
         }
-    } else {
-        if (buf_pos < BUFFER_SIZE - 1) {
-            buffer[buf_pos++] = c;
-            vga_putchar(c);
+        return;
+    }
+
+    // normal character: insert at cursor_pos
+    if (buf_pos < BUFFER_SIZE - 1) {
+        for (int i = buf_pos; i > cursor_pos; i--) {
+            buffer[i] = buffer[i - 1];
         }
+        buffer[cursor_pos] = c;
+        buf_pos++;
+        cursor_pos++;
+        redraw_tail(cursor_pos - 1, buf_pos - 1);
     }
 }
 
