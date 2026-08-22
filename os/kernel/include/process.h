@@ -4,7 +4,7 @@
 #include "isr.h"
 
 #define MAX_PROCESSES 16
-#define KERNEL_STACK_SIZE 4096
+#define KERNEL_STACK_SIZE 16384
 
 #define PROCESS_STATE_FREE 0
 #define PROCESS_STATE_READY 1
@@ -23,6 +23,8 @@ typedef struct {
     unsigned int size;
     unsigned int offset;
     int used;
+    char name[100];
+    int mode;
 } fd_t;
 
 typedef struct {

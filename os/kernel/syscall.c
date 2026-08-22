@@ -38,7 +38,7 @@ static void sys_file_read(struct registers *r) {
     char *buf = (char *)r->ecx;
     unsigned int count = r->edx;
 
-    if (!current_process || fd < 3 || fd >= MAX_FDS || !current_process->fds[fd].used) {
+    if (!current_process || (fd != 0 && fd < 3) || fd >= MAX_FDS || !current_process->fds[fd].used) {
         r->eax = -1;
         return;
     }
@@ -55,7 +55,7 @@ static void sys_file_read(struct registers *r) {
 static void sys_read(struct registers *r) {
     int fd = (int)r->ebx;
 
-    if (fd >= 3) {
+    if (fd >= 3 || (fd == 0 && current_process && current_process->fds[0].used)) {
         sys_file_read(r);
         return;
     }
@@ -107,6 +107,12 @@ static void sys_write(struct registers *r) {
     int fd = (int)r->ebx;
     char *buf = (char *)r->ecx;
     unsigned int count = r->edx;
+
+    if (fd == 1 && current_process && current_process->fds[1].used && current_process->fds[1].mode == 1) {
+        fs_write(current_process->fds[1].name, buf, count, 1);
+        r->eax = count;
+        return;
+    }
 
     if (fd == 1 || fd == 2) {
         for (unsigned int i = 0; i < count; i++) {

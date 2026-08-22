@@ -1,5 +1,9 @@
 #include "include/fs.h"
+#include "include/kmalloc.h"
 #include "include/kstring.h"
+
+#define MAX_WRITEABLE_FILES 32
+#define WFILE_INITIAL_CAP 512
 
 typedef struct {
     char name[100];
@@ -21,8 +25,17 @@ typedef struct {
     char pad[12];
 } __attribute__((packed)) ustar_header_t;
 
+typedef struct {
+    char name[100];
+    char *data;
+    unsigned int size;
+    unsigned int capacity;
+    int used;
+} wfile_t;
+
 static void *fs_archive;
 static unsigned int fs_size;
+static wfile_t wfiles[MAX_WRITEABLE_FILES];
 
 static unsigned int parse_octal(const char *s, int len) {
     unsigned int val = 0;
@@ -38,8 +51,71 @@ int fs_init(void *archive, unsigned int size) {
     return 0;
 }
 
+static wfile_t *wfile_find(const char *name) {
+    for (int i = 0; i < MAX_WRITEABLE_FILES; i++) {
+        if (wfiles[i].used && kstrcmp(wfiles[i].name, name) == 0) {
+            return &wfiles[i];
+        }
+    }
+    return 0;
+}
+
+int fs_create(const char *name) {
+    wfile_t *f = wfile_find(name);
+    if (f) {
+        f->size = 0;
+        return 0;
+    }
+    for (int i = 0; i < MAX_WRITEABLE_FILES; i++) {
+        if (!wfiles[i].used) {
+            kstrcpy(wfiles[i].name, name);
+            wfiles[i].data = (char *)kmalloc(WFILE_INITIAL_CAP);
+            wfiles[i].capacity = WFILE_INITIAL_CAP;
+            wfiles[i].size = 0;
+            wfiles[i].used = 1;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+int fs_write(const char *name, const char *data, unsigned int len, int append) {
+    wfile_t *f = wfile_find(name);
+    if (!f) {
+        if (fs_create(name) != 0) return -1;
+        f = wfile_find(name);
+    }
+
+    unsigned int offset = append ? f->size : 0;
+    unsigned int needed = offset + len;
+
+    if (needed > f->capacity) {
+        unsigned int new_cap = f->capacity * 2;
+        while (new_cap < needed) new_cap *= 2;
+        char *new_data = (char *)kmalloc(new_cap);
+        for (unsigned int i = 0; i < f->size; i++) new_data[i] = f->data[i];
+        kfree(f->data);
+        f->data = new_data;
+        f->capacity = new_cap;
+    }
+
+    for (unsigned int i = 0; i < len; i++) {
+        f->data[offset + i] = data[i];
+    }
+    f->size = offset + len;
+    return len;
+}
+
 fs_file_t fs_open(const char *name) {
     fs_file_t result = {0, 0};
+
+    wfile_t *wf = wfile_find(name);
+    if (wf) {
+        result.data = wf->data;
+        result.size = wf->size;
+        return result;
+    }
+
     unsigned char *ptr = (unsigned char *)fs_archive;
     unsigned char *end = ptr + fs_size;
 
@@ -63,7 +139,7 @@ fs_file_t fs_open(const char *name) {
     return result;
 }
 
-int fs_list(char (*names)[100], int max_names) {
+int fs_list(char names[][100], int max_names) {
     int count = 0;
     unsigned char *ptr = (unsigned char *)fs_archive;
     unsigned char *end = ptr + fs_size;
@@ -78,6 +154,13 @@ int fs_list(char (*names)[100], int max_names) {
         unsigned int size = parse_octal(hdr->size, 12);
         unsigned int blocks = (size + 511) / 512;
         ptr += 512 + blocks * 512;
+    }
+
+    for (int i = 0; i < MAX_WRITEABLE_FILES && count < max_names; i++) {
+        if (wfiles[i].used) {
+            kstrcpy(names[count], wfiles[i].name);
+            count++;
+        }
     }
 
     return count;

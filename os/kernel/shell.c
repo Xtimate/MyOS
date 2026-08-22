@@ -27,6 +27,8 @@ static char history[HISTORY_SIZE][BUFFER_SIZE];
 static int history_count = 0;
 static int history_pos = -1;
 static int cursor_pos = 0;
+static char *redirect_target = 0;
+static char *redirect_input = 0;
 
 // command handler type
 typedef void (*command_func)(int argc, char **argv);
@@ -118,15 +120,15 @@ static void cmd_uptime(int argc, char **argv) {
 }
 
 static void cmd_hello(int argc, char **argv) {
-    vga_print("\nHello from myOS!\n");
+    shell_output("\nHello from myOS!\n");
 }
 
 static void cmd_help(int argc, char **argv) {
-    vga_print("\nAvailable commands:\n");
+    shell_output("\nAvailable commands:\n");
     for (int i = 0; commands[i].name != 0; i++) {
-        vga_print("  ");
-        vga_print(commands[i].name);
-        vga_print("\n");
+        shell_output("  ");
+        shell_output(commands[i].name);
+        shell_output("\n");
     }
 }
 
@@ -135,10 +137,10 @@ static void cmd_clear(int argc, char **argv) {
 }
 
 static void cmd_echo(int argc, char **argv) {
-    vga_print("\n");
+    shell_output("\n");
     for (int i = 1; i < argc; i++) {
-        vga_print(argv[i]);
-        if (i < argc - 1) vga_print(" ");
+        shell_output(argv[i]);
+        if (i < argc - 1) shell_output(" ");
     }
     vga_print("\n");
 }
@@ -170,7 +172,7 @@ static void cmd_exec(int argc, char **argv) {
         return;
     }
     vga_print("\n");
-    exec(argv[1], argc -1, argv + 1);
+    exec(argv[1], argc -1, argv + 1, redirect_target, redirect_input);
 }
 
 static void cmd_ps(int argc, char **argv) {
@@ -228,20 +230,20 @@ static void cmd_kill(int argc, char **argv) {
 
 static void cmd_cat(int argc, char **argv) {
     if (argc < 2) {
-        vga_print("\nUsage: cat <filename>\n");
+        shell_output("\nUsage: cat <filename>\n");
         return;
     }
 
     fs_file_t f = fs_open(argv[1]);
     if (f.data == 0) {
-        vga_print("\ncat: file not found\n");
+        shell_output("\ncat: file not found\n");
         return;
     }
 
-    vga_print("\n");
+    shell_output("\n");
     for (unsigned int i = 0; i < f.size; i++) {
         char tmp[2] = { f.data[i], 0 };
-        vga_print(tmp);
+        shell_output(tmp);
     }
     vga_print("\n");
 }
@@ -321,6 +323,14 @@ static void cmd_dhcp(int argc, char **argv) {
     }
 }
 
+void shell_output(const char *str) {
+    if (redirect_target) {
+        fs_write(redirect_target, str, kstrlen(str), 1);
+    } else {
+        vga_print(str);
+    }
+}
+
 static void shell_execute(char *input) {
     if (buf_pos == 0) return;
 
@@ -329,13 +339,48 @@ static void shell_execute(char *input) {
 
     if (argc == 0) return;
 
+    char *output_file = 0;
+    char *input_file = 0;
+
+    for (int i = 0; i < argc; i++) {
+        if (kstrcmp(argv[i], ">") == 0) {
+            if (i + 1 < argc) {
+                output_file = argv[i + 1];
+                argc = i;
+            }
+            break;
+        }
+        if (kstrcmp(argv[i], "<") == 0) {
+            if (i + 1 < argc) {
+                input_file = argv[i + 1];
+                argc = i;
+            }
+            break;
+        }
+    }
+
+    if (argc == 0) return;
+
+    if (output_file) {
+        fs_create(output_file);
+        redirect_target = output_file;
+    }
+    if (input_file) {
+        redirect_input = input_file;
+    }
+
+
     for (int i = 0; commands[i].name != 0; i++) {
         if (kstrcmp(argv[0], commands[i].name) == 0) {
             commands[i].func(argc, argv);
+            redirect_target = 0;
+            redirect_input = 0;
             return;
         }
     }
 
+    redirect_target = 0;
+    redirect_input = 0;
     vga_print("\nUnknown command: ");
     vga_print(argv[0]);
     vga_print("\n");
@@ -461,6 +506,18 @@ void shell_process_char(char c) {
             buf_pos = word_start + match_len;
             cursor_pos = buf_pos;
             redraw_tail(word_start, old_len);
+        } else if (match_count > 1) {
+            vga_print("\n");
+            for (int i = 0; i < count; i++) {
+                if (kstrncmp(names[i], &buffer[word_start], word_len) == 0) {
+                    vga_print(names[i]);
+                    vga_print("  ");
+                }
+            }
+            vga_print("\n");
+            shell_prompt();
+            for (int i = 0; i < buf_pos; i++) vga_putchar(buffer[i]);
+            fb_terminal_set_cursor_x(PROMPT_LEN + cursor_pos);
         }
 
         return;

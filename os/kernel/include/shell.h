@@ -5,5 +5,6 @@ void shell_init();
 void shell_process_char(char c);
 void shell_run();
 void shell_prompt();
+void shell_output(const char *str);
 
 #endif
